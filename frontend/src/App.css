@@ -1,0 +1,24 @@
+.App {
+  text-align: center;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+  border: none;
+}
+
+button:hover {
+  background-color: #0056b3; 
+} 
+
+.container {
+  margin-left: 30vw;
+  margin-top: 100px;
+  text-align: left;
+}
