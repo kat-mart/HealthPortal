@@ -39,7 +39,6 @@ export default function Navbar({ role }) {
                     <div className="nav-title">Health Portal</div>
                 </div>
                 <ul>
-                    <button onClick={handleSignOut}>Sign Out</button>
                     <li>
                         <Link 
                             to={role === 'patient' ? '/Patient' : role === 'doctor' ? '/Doctor' : '/Doctor'} 
@@ -57,6 +56,7 @@ export default function Navbar({ role }) {
                         <Link to='/HealthRecords' onClick={closeNav}>Health Records</Link>
                     </li>
                     }
+                    <button onClick={handleSignOut}>Sign Out</button>
                 </ul>
             </nav>
         </>
