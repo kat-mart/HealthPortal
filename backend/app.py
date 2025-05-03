@@ -64,6 +64,22 @@ def display_patients():
 
     return jsonify({"patients": allPatients})
 
+@app.route('/messages', methods=['POST'])
+def chat():
+    data = request.get_json()
+    user_message = data.get('message')
+
+    # if not user_message:
+    #     return jsonify({'response': 'Error: No message provided.'}), 400
+
+    # try:
+    #     ## TODO: get the senders message and pass it through
+    #     user_text = response.text
+        
+    #     return jsonify({'response': user_text})
+    # except Exception as e:
+    #     print(f"Error: {str(e)}")
+
 # main method
 if __name__ == '__main__':
     initialize_database()
