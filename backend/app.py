@@ -16,7 +16,7 @@ import atexit # used to close database connection when the application exits
 
 # initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 # global variables
 db_ops = db_operations("localhost")
@@ -46,24 +46,6 @@ def initialize_database():
     # db_ops.populate_table('./messages.csv', 'message')
 
 
-# display patients in the database
-@app.route('/api/display-patients', methods=['POST'])
-def display_patients():
-    data = request.get_json()
-    
-    if data["role"] == "patient":
-        query = '''
-        SELECT patient_id, name, email, dob, gender, phone
-        FROM Patient
-        '''
-        patients = db_ops.select_query(query)
-        allPatients = ""
-        for patient in patients:
-            allPatients += str(patient) + "\n"
-        print(allPatients)
-
-    return jsonify({"patients": allPatients})
-
 @app.route('/messages', methods=['POST'])
 def chat():
     data = request.get_json()
@@ -79,6 +61,92 @@ def chat():
     #     return jsonify({'response': user_text})
     # except Exception as e:
     #     print(f"Error: {str(e)}")
+
+
+# check if patient's email and password are in the database and return patient_id
+@app.route('/patient-sign-in', methods=['POST'])
+def verify_patient_account():
+    data = request.get_json()
+    email = data["email"]
+    password = data["password"]
+    
+    query = '''
+    SELECT patient_id
+    FROM patient
+    WHERE email = %s AND password =  %s;
+    '''
+    account = db_ops.select_query_params(query, (email, password))
+
+    result = ""
+    if account:
+        patient_id = account[0][0]
+        print(patient_id)
+        result = "success"
+        return jsonify({"result": result, "patient_id": patient_id})
+    else:
+        result = "error"
+        return jsonify({"result": result})
+
+
+# get patient personal details based on patient_id
+@app.route('/patient-profile', methods=['POST'])
+def get_patient_profile():
+    data = request.get_json()
+    patient_id = data["patient_id"]
+    print(patient_id)
+
+    query = '''
+    SELECT name, email, dob, gender, phone
+    FROM patient
+    WHERE patient_id = %s;
+    '''
+    info = db_ops.select_query(query % patient_id)[0]
+    name = info[0]
+    email = info[1]
+    dob = info[2]
+    gender = info[3]
+    phone = info[4]
+
+    return jsonify({"name": name, "email": email, "dob": dob, "gender": gender, "phone": phone})
+
+# check if doctor's id is in the database and return doctor_id
+@app.route('/doctor-sign-in', methods=['POST'])
+def verify_doctor_account():
+    data = request.get_json()
+    doctor_id = data["doctor_id"]
+
+    query = '''
+    SELECT doctor_id
+    FROM doctor
+    WHERE doctor_id = %s;
+    '''
+    account = db_ops.select_query(query % doctor_id)
+    
+    result = ""
+    if account:
+        doctor_id = account[0][0]
+        result = "success"
+        return jsonify({"result": result, "doctor_id": doctor_id})
+    else:
+        result = "error"
+        return jsonify({"result": result})
+
+
+# get doctor personal details based on doctor_id
+@app.route('/doctor-profile', methods=['POST'])
+def get_doctor_profile():
+    data = request.get_json() 
+    doctor_id = data["doctor_id"]
+
+    query = '''
+    SELECT name
+    FROM doctor
+    WHERE doctor_id = %s;
+    '''
+    name = db_ops.select_query(query % doctor_id)[0][0]
+
+    return jsonify({"name": name})
+
 
 # main method
 if __name__ == '__main__':
