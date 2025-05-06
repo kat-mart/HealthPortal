@@ -131,6 +131,28 @@ def verify_doctor_account():
         result = "error"
         return jsonify({"result": result})
 
+# add a new doctor to the database
+@app.route('/doctor-sign-up', methods=['POST'])
+def add_doctor():
+    data = request.get_json()
+    name = data["name"]
+
+    insert_doctor = '''
+    INSERT INTO doctor(name)
+    VALUES(%s)
+    '''
+    db_ops.modify_query_params(insert_doctor, (name,))
+
+    # return the max id because autoincrement assigns the next largest id
+    select_max_id = '''
+    SELECT MAX(doctor_id)
+    FROM doctor;
+    '''
+    doctor_id = db_ops.select_query(select_max_id)[0][0]
+
+    return jsonify({"doctor_id": doctor_id})
+
+
 
 # get doctor personal details based on doctor_id
 @app.route('/doctor-profile', methods=['POST'])
@@ -146,6 +168,7 @@ def get_doctor_profile():
     name = db_ops.select_query(query % doctor_id)[0][0]
 
     return jsonify({"name": name})
+
 
 
 # main method
