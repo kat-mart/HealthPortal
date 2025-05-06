@@ -169,6 +169,57 @@ def get_doctor_profile():
 
     return jsonify({"name": name})
 
+@app.route('/add-appointment', methods=['POST'])
+def add_appointment():
+    data = request.get_json()
+    find_doc = '''
+    SELECT doctor_id 
+    FROM doctor
+    ORDER BY RAND() 
+    LIMIT 1;
+    '''
+    result = db_ops.select_query(find_doc)  # This returns a list of tuples
+    doctor_id = result[0][0]
+    patient_id = data["patient_id"]
+    date = data["newEventDate"]
+    time = data["newEventTime"]
+    status = data["eventStatus"]
+    reason = data["newEventTitle"]
+
+    insert_appointment = '''
+    INSERT INTO appointment(date, time, status, reason, patient_id, doctor_id)
+    VALUES(%s, %s, %s, %s, %s, %s)
+    '''
+    db_ops.modify_query_params(insert_appointment, (date, time, status, reason, patient_id, doctor_id))
+
+    # Now fetch the newly created appointment_id
+    get_appointment_id = "SELECT LAST_INSERT_ID();"
+    appointment_id = db_ops.single_record(get_appointment_id)  # Fetch the last inserted id
+
+    return jsonify({
+        "result": "success",
+        "appointment_id": appointment_id,  # Return the appointment_id
+        "title": reason,
+        "newEventDate": date,
+        "newEventTime": time,
+        "eventStatus": status
+    })
+
+# delete an appointment on click
+@app.route('/delete-appointment', methods=['POST'])
+def delete_appointment():
+    data = request.get_json()
+    appointment_id = data.get("appointment_id")
+
+    if appointment_id:
+        delete_query = '''
+        DELETE FROM appointment WHERE appointment_id = %s
+        '''
+        db_ops.modify_query_params(delete_query, (appointment_id,))
+        return jsonify({"result": "success", "message": f"Appointment {appointment_id} deleted."})
+    else:
+        return jsonify({"result": "failure", "message": "appointment_id is required."}), 400
+
 
 
 # main method

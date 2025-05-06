@@ -5,17 +5,18 @@ Apointments page for users to view and manage their appointments.
 import './Appointments.css';
 import React, { useState } from 'react'; 
 import Navbar from './Navbar';
+import axios from 'axios';
 
 import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction'; 
 
-export default function Appointments({ role }) {
+export default function Appointments({ role, pID }) {
     const [events, setEvents] = useState([]);
     const [newEventTitle, setNewEventTitle] = useState('');
     const [newEventDate, setNewEventDate] = useState('');
     const [newEventTime, setNewEventTime] = useState('');
-    const [eventStatus, setEventStatus] = useState(false);
+    const [eventStatus, setEventStatus] = useState("Pending"); 
 
     const handleDateClick = (arg) => {
         alert('Date clicked: ' + arg.dateStr);
@@ -34,33 +35,66 @@ export default function Appointments({ role }) {
     // adding a new event to the calendar
     const handleAddEvent = () => {
         if (newEventTitle && newEventDate && newEventTime) {
-            const dateTime = `${newEventDate} ${newEventTime}`; // Combine date and time 
-
+            const dateTime = `${newEventDate} ${newEventTime}`; // Combine date and time
+    
+            // Create the new event object (this will be used for FullCalendar)
             const newEvent = {
-                id: events.length + 1,  // generate a simple id based on current event length
                 title: newEventTitle,
                 date: dateTime,
-                color: eventStatus ? "#28a745" : "#ffc107", // green if confirmed, yellow if not
+                color: eventStatus === "Confirmed" ? "#28a745" : "#ffc107", // green if confirmed, yellow if not
             };
-
-            setEvents([...events, newEvent]);
-            setNewEventTitle('');
-            setNewEventDate('');
-            setNewEventTime('');
-            setEventStatus(false); // update status message
+    
+            // Send the event data to the backend
+            axios.post('http://127.0.0.1:5000/add-appointment', {
+                patient_id: pID,
+                newEventTitle: newEventTitle,
+                newEventDate: newEventDate,
+                newEventTime: newEventTime,
+                eventStatus: eventStatus,
+            })
+            .then(response => {
+                // Once the backend returns the response with the appointment_id
+                newEvent.id = response.data.appointment_id; // Use the returned appointment_id as the FullCalendar event ID
+    
+                // Add the new event with the real appointment_id to FullCalendar
+                setEvents([...events, newEvent]);
+    
+                // Reset form fields
+                setNewEventTitle('');
+                setNewEventDate('');
+                setNewEventTime('');
+                setEventStatus("Pending"); // Reset the event status to Pending
+            })
+            .catch(error => {
+                console.error('Error sending data to backend:', error);
+            });
         } else {
             alert('Please fill in all fields (title, date, and time).');
         }
     };
+    
 
     // deleting an event from the calendar
     const handleEventClick = (clickInfo) => {
         if (window.confirm('Are you sure you want to delete this event?')) {
-            // remove the event from FullCalendar
-            clickInfo.event.remove();
-            setEvents(events.filter(event => event.id !== clickInfo.event.id));
+            const appointmentId = clickInfo.event.id;  // Get the event's appointment_id from FullCalendar
+    
+            // Send delete request to the backend
+            axios.post('http://127.0.0.1:5000/delete-appointment', {
+                appointment_id: appointmentId,  // Pass the correct appointment_id
+            })
+            .then(response => {
+                console.log('Event deleted:', response.data);
+                // Remove the event from FullCalendar and the frontend state
+                clickInfo.event.remove();
+                setEvents(events.filter(event => event.id !== appointmentId));
+            })
+            .catch(error => {
+                console.error('Error deleting event:', error);
+            });
         }
     };
+    
 
     return (
         <div className='container'>
@@ -91,11 +125,11 @@ export default function Appointments({ role }) {
                                     onChange={(e) => setNewEventTime(e.target.value)}
                                 />
                                 <label> Confirmed?
-                                    <input
-                                        type="checkbox"
-                                        checked={eventStatus}
-                                        onChange={(e) => setEventStatus(e.target.checked)}
-                                    />
+                                <input
+                                    type="checkbox"
+                                    checked={eventStatus === "Confirmed"} // Check if the status is "Confirmed"
+                                    onChange={(e) => setEventStatus(e.target.checked ? "Confirmed" : "Pending")} // Update to "Confirmed" or "Pending"
+                                />
                                 </label>
                                 <button onClick={() => { handleAddEvent(); closePopup(); }}>
                                     Add Event
