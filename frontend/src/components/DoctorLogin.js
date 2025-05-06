@@ -37,8 +37,8 @@ export default function DoctorLogin({ setId }) {
             
             result = res.data.result;
             if (result === "success") {
-                navigate('/Doctor'); // redirect to Doctor page after sign in
                 setId(res.data.doctor_id)
+                navigate('/Doctor'); // redirect to Doctor page after sign in
             } 
             else if (result === "error") {
                 setSignInError(true);
@@ -54,8 +54,17 @@ export default function DoctorLogin({ setId }) {
     const handleSignUp = (e) => {
         e.preventDefault();  
 
-        // TODO: Add logic to create a new doctor account
-        navigate('/Doctor'); // redirect to Doctor page after sign up
+        axios.post('http://127.0.0.1:5000/doctor-sign-up', {
+            name: name
+        })
+        .then(res => {
+            console.log('Response from doctor sign up server', res.data);
+            setId(res.data.doctor_id)
+            navigate('/Doctor'); // redirect to Doctor page after sign up
+        })
+        .catch(error => {
+            console.error('Error sending message to doctor sign up:', error)
+        });
     }
 
     return (
@@ -91,7 +100,7 @@ export default function DoctorLogin({ setId }) {
                     <form className="login-form">
                         <div className="login-form-item">
                             <label>Name:</label>
-                            <input type="number" value={name} onChange={(e) => setName(e.target.value)}/>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
                         </div>
                         <button onClick={(e) => handleSignUp(e)} type="submit">Sign Up</button>
                     </form>
