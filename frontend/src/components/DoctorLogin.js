@@ -5,13 +5,15 @@ Page for doctors to either sign in or create an account.
 import './Login.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-export default function DoctorLogin() {
+export default function DoctorLogin({ setId }) {
     const navigate = useNavigate();
-    const[signUp, setSignUp] = useState(false);
-    const[signIn, setSignIn] = useState(false);
-    const[id, setID] = useState("");
-    const[name, setName] = useState("");
+    const [signUp, setSignUp] = useState(false);
+    const [signIn, setSignIn] = useState(false);
+    const [doctorId, setDoctorId] = useState("");
+    const [name, setName] = useState("");
+    const [signInError, setSignInError] = useState(false);
 
     // saves user's choice when they click sign up or sign in
     const handleChoice = (input) => {
@@ -24,17 +26,35 @@ export default function DoctorLogin() {
 
     // handle sign in
     const handleSignIn = (e) => {
-        // TODO: Add logic to verify doctor credentials
-
         e.preventDefault();  
-        navigate('/Doctor'); // redirect to Doctor page after sign in
+
+        let result = ""
+        axios.post('http://127.0.0.1:5000/doctor-sign-in', {
+            doctor_id: doctorId
+        })
+        .then(res => {
+            console.log('Response from doctor sign in server:', res.data);
+            
+            result = res.data.result;
+            if (result === "success") {
+                navigate('/Doctor'); // redirect to Doctor page after sign in
+                setId(res.data.doctor_id)
+            } 
+            else if (result === "error") {
+                setSignInError(true);
+                console.log(signInError)
+            }
+        })
+        .catch(error => {
+            console.error('Error sending message to doctor sign in:', error);
+        });
     }
 
     // handle sign up
     const handleSignUp = (e) => {
-        // TODO: Add logic to create a new doctor account
-
         e.preventDefault();  
+
+        // TODO: Add logic to create a new doctor account
         navigate('/Doctor'); // redirect to Doctor page after sign up
     }
 
@@ -56,10 +76,11 @@ export default function DoctorLogin() {
                     <form className="login-form">
                         <div className="login-form-item">
                             <label>Enter Doctor ID:</label>
-                            <input type="number" value={id} onChange={(e) => setID(e.target.value)}/>
+                            <input type="number" value={doctorId} onChange={(e) => setDoctorId(e.target.value)}/>
                         </div>
                         <button onClick={(e) => handleSignIn(e)} type="submit">Sign In</button>
                     </form>
+                    {signInError && (<p>Invalid Doctor ID.</p>)}
                     <button onClick={() => setSignIn(false)}>Back</button>
                 </div>
             ) : null}
