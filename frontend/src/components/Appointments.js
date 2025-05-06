@@ -15,9 +15,20 @@ export default function Appointments({ role }) {
     const [newEventTitle, setNewEventTitle] = useState('');
     const [newEventDate, setNewEventDate] = useState('');
     const [newEventTime, setNewEventTime] = useState('');
+    const [eventStatus, setEventStatus] = useState(false);
 
     const handleDateClick = (arg) => {
         alert('Date clicked: ' + arg.dateStr);
+    };
+    const [activePopup, setActivePopup] = useState(null);
+    // show or hide the popup
+    const togglePopup = (AddEvent) => {
+        setActivePopup(prevState => (prevState === AddEvent ? null : AddEvent)); // Toggle between showing and hiding
+    };
+
+    // Function to close the popup
+    const closePopup = () => {
+        setActivePopup(null);
     };
 
     // adding a new event to the calendar
@@ -29,12 +40,14 @@ export default function Appointments({ role }) {
                 id: events.length + 1,  // generate a simple id based on current event length
                 title: newEventTitle,
                 date: dateTime,
+                color: eventStatus ? "#28a745" : "#ffc107", // green if confirmed, yellow if not
             };
 
-            setEvents([...events, newEvent]);  // add new event to the state
+            setEvents([...events, newEvent]);
             setNewEventTitle('');
             setNewEventDate('');
             setNewEventTime('');
+            setEventStatus(false); // update status message
         } else {
             alert('Please fill in all fields (title, date, and time).');
         }
@@ -52,33 +65,54 @@ export default function Appointments({ role }) {
     return (
         <div className='container'>
             <Navbar role={role} />
-            <h1>Appointments</h1>
-            
-            <div className='appointment-header'>Upcoming events</div>
-                <p>Add a new event:</p>
-            <div className='add-event-form'>
-                <input
-                    type="text"
-                    placeholder="Event Title"
-                    value={newEventTitle}
-                    onChange={(e) => setNewEventTitle(e.target.value)}/>
-                <input
-                    type="date"
-                    value={newEventDate}
-                    onChange={(e) => setNewEventDate(e.target.value)}/>
-                <input
-                    type="time"
-                    value={newEventTime}
-                    onChange={(e) => setNewEventTime(e.target.value)}/>
-                <button onClick={handleAddEvent}>Add Event</button>
-            </div>
+            <h1>Your Events</h1>
+                <button className='button' onClick={() => togglePopup('Add Event')}>Add Event</button>
+
+                {activePopup === 'Add Event' && (
+                    <div className="popup">
+                        <div className="popup-content">
+                            <button className="close-btn" onClick={closePopup}>✖</button>
+                            <h3>Add a New Event</h3>
+                            <div className='add-event-form'>
+                                <input
+                                    type="text"
+                                    placeholder="Event Title"
+                                    value={newEventTitle}
+                                    onChange={(e) => setNewEventTitle(e.target.value)}
+                                />
+                                <input
+                                    type="date"
+                                    value={newEventDate}
+                                    onChange={(e) => setNewEventDate(e.target.value)}
+                                />
+                                <input
+                                    type="time"
+                                    value={newEventTime}
+                                    onChange={(e) => setNewEventTime(e.target.value)}
+                                />
+                                <label> Confirmed?
+                                    <input
+                                        type="checkbox"
+                                        checked={eventStatus}
+                                        onChange={(e) => setEventStatus(e.target.checked)}
+                                    />
+                                </label>
+                                <button onClick={() => { handleAddEvent(); closePopup(); }}>
+                                    Add Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             <div className='calender-container'>
                 <FullCalendar
                     plugins={[listPlugin, interactionPlugin]} 
                     initialView="listMonth" 
                     events={events} 
                     dateClick={handleDateClick}
-                    eventClick={handleEventClick}/>
+                    eventClick={handleEventClick}
+                    />
             </div>
         </div>
     );
