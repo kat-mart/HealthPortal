@@ -113,6 +113,26 @@ def get_doctor_profile():
     WHERE doctor_id = %s;
     '''
     name = db_ops.select_query(query % doctor_id)[0][0]
+
+# add a new doctor to the database
+def add_doctor():
+    data = {"name": "Dr. Wendy Lopez"}
+    name = data["name"]
+
+    insert_doctor = '''
+    INSERT INTO doctor(name)
+    VALUES(%s)
+    '''
+    db_ops.modify_query_params(insert_doctor, (name,))
+
+    # return the max id because autoincrement assigns the next largest id
+    select_max_id = '''
+    SELECT MAX(doctor_id)
+    FROM doctor;
+    '''
+    doctor_id = db_ops.select_query(select_max_id)[0][0]
+    print(doctor_id)
+
     
 
 # main method
@@ -123,6 +143,7 @@ def main():
     # get_patient_profile()
     # verify_doctor_account()
     # get_doctor_profile()
+    # add_doctor()
 
     db_ops.destructor()
 
