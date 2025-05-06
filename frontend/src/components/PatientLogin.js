@@ -3,19 +3,21 @@ Page for patients to either sign in or create an account.
 */
 
 import './Login.css';
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-export default function PatientLogin() {
-    const[signUp, setSignUp] = useState(false);
-    const[signIn, setSignIn] = useState(false);
-    const[email, setEmail] = useState("");
-    const[password, setPassword] = useState("");
+export default function PatientLogin({ setId }) {
+    const navigate = useNavigate();
+    const [signUp, setSignUp] = useState(false);
+    const [signIn, setSignIn] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const [dob, setDob] = useState("");
     const [gender, setGender] = useState("");
     const [phone, setPhone] = useState("");
-    const navigate = useNavigate();
+    const [signInError, setSignInError] = useState(false);
 
     // saves user's choice when they click sign up or sign in
     const handleChoice = (input) => {
@@ -28,17 +30,36 @@ export default function PatientLogin() {
 
     // handle sign in 
     const handleSignIn = (e) => {
-        // TODO: Add logic to verify patient credentials
-
         e.preventDefault();
-        navigate('/Patient'); // redirect to Patient page after sign in
+
+        let result = ""
+        axios.post('http://127.0.0.1:5000/patient-sign-in', {
+            email: email,
+            password: password
+        })
+        .then(res => {
+            console.log('Response from patient sign in server:', res.data);
+            
+            result = res.data.result;
+            if (result === "success") {
+                navigate('/Patient'); // redirect to Patient page after sign in
+                setId(res.data.patient_id)
+            } 
+            else if (result === "error") {
+                setSignInError(true);
+                console.log(signInError)
+            }
+        })
+        .catch(error => {
+            console.error('Error sending message to patient sign in:', error);
+        });
     }
 
     // handle sign up
     const handleSignUp = (e) => {
-        // TODO: Add logic to create a new patient account
-        
         e.preventDefault();
+
+        // TODO: Add logic to create a new patient account
         navigate('/Patient'); // redirect to Patient page after sign up
     }
 
@@ -70,6 +91,7 @@ export default function PatientLogin() {
                         </div>
                         <button onClick={(e) => handleSignIn(e)} type="submit">Sign In</button>
                     </form>
+                    {signInError && (<p>Invalid email or password.</p>)}
                     <button onClick={() => setSignIn(false)}>Back</button>
                 </div>
             ) : null}
