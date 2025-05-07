@@ -59,8 +59,26 @@ export default function PatientLogin({ setId }) {
     const handleSignUp = (e) => {
         e.preventDefault();
 
-        // TODO: Add logic to create a new patient account
-        navigate('/Patient'); // redirect to Patient page after sign up
+        axios.post('http://127.0.0.1:5000/patient-sign-up', {
+            email: email,
+            password: password,
+            name: name,
+            dob: dob,
+            gender: gender,
+            phone: phone
+
+        })
+        .then(res => {
+            console.log('Response from patient sign up server', res.data);
+            setId(res.data.patient_id)
+            navigate('/Patient'); //redirect to patient sign up 
+
+        })
+        .catch(error => {
+            console.error('Error sending message to patient sign up:', error)
+        });
+        
+        
     }
 
     return (
@@ -124,8 +142,8 @@ export default function PatientLogin({ setId }) {
                             <label>Gender:</label>
                             <select value={gender} onChange={(e) => setGender(e.target.value)}>
                                 <option></option>
-                                <option>Male</option>
-                                <option>Female</option>
+                                <option>M</option>
+                                <option>F</option>
                             </select>
                         </div>
                         <div className="login-form-item">

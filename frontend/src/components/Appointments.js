@@ -77,7 +77,7 @@ export default function Appointments({ role, pID }) {
     // deleting an event from the calendar
     const handleEventClick = (clickInfo) => {
         if (window.confirm('Are you sure you want to delete this event?')) {
-            const appointmentId = clickInfo.event.id;  // Get the event's appointment_id from FullCalendar
+            const appointmentId = Number(clickInfo.event.id);  // Get the event's appointment_id from FullCalendar
     
             // Send delete request to the backend
             axios.post('http://127.0.0.1:5000/delete-appointment', {

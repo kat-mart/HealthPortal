@@ -133,11 +133,35 @@ def add_doctor():
     doctor_id = db_ops.select_query(select_max_id)[0][0]
     print(doctor_id)
 
+
+# add new patient info
+def add_patient():
+    data = {"name" : "Lisa", "email" : "lisa@gmail.com", "password" : "1234", "dob" : "2000-01-01", "gender" : "F", "phone" : "7147471740"} # example data
+    name = data["name"]
+    email = data["email"]
+    password = data["password"]
+    dob = data["dob"]
+    gender = data["gender"]
+    phone = data["phone"]
+
+    insert_patient = '''
+    INSERT INTO patient(name, email, password, dob, gender, phone)
+    VALUES(%s, %s, %s, %s, %s, %s)
+    '''
+    db_ops.modify_query_params(insert_patient, (name, email, password, dob, gender, phone))
+    
+    select_max_id = '''
+    SELECT MAX(patient_id)
+    FROM patient;
+    '''
+    patient_id = db_ops.select_query(select_max_id)[0][0]
+    print(patient_id)
     
 
 # main method
 def main():
     initialize_database()
+    add_patient()
     # display_patients()
     # verify_patient_account()
     # get_patient_profile()

@@ -6,7 +6,7 @@ class db_operations():
     def __init__(self, conn_path):
         self.connection = mysql.connector.connect(host=conn_path,
         user="root",
-        password="CPSC408!",
+        password="porkys27",
         auth_plugin='mysql_native_password',
         database="HealthPortal") 
         self.cursor = self.connection.cursor()
