@@ -1,4 +1,3 @@
-appointment_id,date,time,status,reason,patient_id,doctor_id
 101,2025-04-01,9:00,Completed,Annual Check-up,1,301
 102,2025-04-02,11:00,Pending,Headache,2,302
 103,2025-04-03,14:30,Cancelled,Flu symptoms,3,303
