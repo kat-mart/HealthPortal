@@ -3,7 +3,7 @@ Apointments page for users to view and manage their appointments.
 */
 
 import './Appointments.css';
-import React, { useState } from 'react'; 
+import React, { useState, useEffect  } from 'react'; 
 import Navbar from './Navbar';
 import axios from 'axios';
 
@@ -31,6 +31,35 @@ export default function Appointments({ role, pID }) {
     const closePopup = () => {
         setActivePopup(null);
     };
+
+    useEffect(() => {
+        if (!pID) return; 
+        const fetchEvents = async () => {
+            await populateEvents();
+        };
+        fetchEvents();
+    }, [pID]); 
+
+
+    // Function to fetch events from the backend
+    const populateEvents = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:5000/get-appointments', {
+                params: { patient_id: pID }
+            });
+            const fetchedEvents = response.data.appointments.map(event => ({
+                id: event.appointment_id,
+                date: `${event.date} ${event.time}`,
+                color: event.status === "Confirmed" ? "#28a745" : "#ffc107",
+                title: event.reason
+            }));
+            setEvents(fetchedEvents);
+            console.log('Fetched events:', fetchedEvents);
+        } catch (error) {
+            console.error('Error fetching events:', error);
+        }
+    };
+    
 
     // adding a new event to the calendar
     const handleAddEvent = () => {
