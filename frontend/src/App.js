@@ -30,7 +30,7 @@ function App() {
         <Route path="/Doctor" element={<Doctor role={role} id={doctorId} />} />
         <Route path="/Patient" element={<Patient role={role} id={patientId} />} />
         <Route path="/Appointments" element={<Appointments role={role} pID={patientId} />} />
-        <Route path="/Messages" element={<Messages role={role} />} />
+        <Route path="/Messages" element={<Messages role={role} pID={patientId} dID={doctorId} />} />
         <Route path="/HealthRecords" element={<HealthRecords role={role} />} />
       </Routes>
     </div>

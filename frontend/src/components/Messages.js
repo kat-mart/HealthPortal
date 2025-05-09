@@ -3,52 +3,82 @@ Messages page for doctors and patients to send and receive messages.
 */
 
 import './Messages.css';
-import React, { useState, useRef } from 'react'; 
+import React, { useState, useRef, useEffect } from 'react'; 
 import Navbar from './Navbar';
+import axios from 'axios';
 
-function Messages({ role }) {
+function Messages({ role, pID, dID }) {
   const [userMessage, setUserMessage] = useState("")
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef(null)
+  let id = null;
 
-  const handleSendMessage = async () => {
-    if (!userMessage.trim()) return // Don't send empty messages
+  // assign id to the id of the current user role
+  if (role === "patient") {
+    id = pID
+  } else if (role === "doctor") {
+    id = dID
+  }
 
-    // Add user's message to chat
-    const newMessages = [...messages, { sender: "You", text: userMessage }]
-    setMessages(newMessages)
-    setUserMessage("") 
+  // display messages based on patient or doctor
+  useEffect(() => {
+    if ((pID !== "" && role === "patient") || (dID !== "" && role === "doctor")) {
+      // delay the call by 1 ms
+      const timer = setTimeout(() => {
+        const fetchData = () => {
+          axios.post('http://127.0.0.1:5000/get-messages', {
+            role: role,
+            id: id
+          })
+          .then(res => {
+            console.log('Response from get messages server:', res.data);
+            setMessages(res.data);
+          })
+          .catch(error => {
+            console.error('Error sending message to get messages:', error);
+          });
+        };
+
+        fetchData(); 
+      }, 1);  // 1ms delay
+
+      // cleanup timeout if the component is unmounted or if id changes
+      return () => clearTimeout(timer);
+    }
+  }, [pID, dID]); // run when id changes
+
+  // send message to the server and add to existing messages
+  const handleSendMessage = () =>  {
+    if (!userMessage.trim()) return // don't send empty messages
     setLoading(true) 
 
-    try {
-      const response = await fetch("http://localhost:5000/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
-      })
+    let endpoint = ""
 
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (data.response) {
-        setMessages([...newMessages, { sender: "Sender", text: data.response }])
-      } else {
-        setMessages([...newMessages, { sender: "Sender", text: "Error: Could not get response." }])
-      }
-    } catch (error) {
-      console.error("Error:", error)
-      setMessages([
-        ...newMessages,
-        { sender: "Sender", text: `Error: ${error.message || "Could not reach server."}` },
-      ])
-    } finally {
-      setLoading(false)
+    if (role === "patient") {
+      endpoint = "http://127.0.0.1:5000/send-patient-message"
+    } 
+    else if (role === "doctor") {
+      endpoint = "http://127.0.0.1:5000/send-doctor-message"
     }
-  }
+
+    axios.post(endpoint, {
+      id: id,
+      message_body: userMessage
+    })
+    .then(res => {
+      console.log('Response from get send patient message server:', res.data);
+      setUserMessage("");
+      setLoading(false);
+
+      if (res.data.result === true) {
+        setMessages(prevMessages => [...prevMessages, res.data]); // add new message to messages
+      }
+    })
+    .catch(error => {
+      console.error('Error sending message to send patient message:', error);
+    });
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -58,15 +88,15 @@ function Messages({ role }) {
   }
 
   return (
-    <div className="app">
+    <div className="container">
     <Navbar role={role} />
       <h1>Messages</h1>
       <div className="chat-box">
         <div className="messages">
           {messages.length === 0 && <div className="empty-state">Start a chat...</div>}
-          {messages.map((msg, index) => (
-            <div key={index} className={`message ${msg.sender === "You" ? "user" : "sender"}`}>
-              <strong>{msg.sender}:</strong> {msg.text}
+          {messages.map((msg) => (
+            <div key={msg.message_id} className={`message ${msg.sender_id === id ? "user" : "sender"}`}>
+              <strong>{msg.sender_id === id ? msg.sender_name : msg.receiver_name} :</strong> {msg.message_body}
             </div>
           ))}
           {loading && <div className="loading">✨Awaiting Response</div>}
