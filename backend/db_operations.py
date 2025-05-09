@@ -1,6 +1,7 @@
 import mysql.connector
 from helper import helper
 
+
 class db_operations():
     # constructor with connection path to DB
     def __init__(self, conn_path):
@@ -8,23 +9,26 @@ class db_operations():
         user="root",
         password="CPSC408!",
         auth_plugin='mysql_native_password',
-        database="HealthPortal") 
+        database="HealthPortal")
         self.cursor = self.connection.cursor()
         print("connection made..")
 
+
     # function to simply execute a DDL or DML query.
-    # commits query, returns no results. 
+    # commits query, returns no results.
     # best used for insert/update/delete queries with no parameters
     def modify_query(self, query):
         self.cursor.execute(query)
         self.connection.commit()
 
+
     # function to simply execute a DDL or DML query with parameters
-    # commits query, returns no results. 
+    # commits query, returns no results.
     # best used for insert/update/delete queries with named placeholders
     def modify_query_params(self, query, params):
         self.cursor.execute(query, params)  # positional placeholders
         self.connection.commit()
+
 
     # function to simply execute a DQL query
     # does not commit, returns results
@@ -33,7 +37,8 @@ class db_operations():
         self.cursor.execute(query)  # Execute the query
         return self.cursor.fetchall()  # Fetch and return all results
 
-    
+
+   
     # function to simply execute a DQL query with parameters
     # does not commit, returns results
     # best used for select queries with named placeholders
@@ -42,23 +47,25 @@ class db_operations():
         return self.cursor.fetchall()
 
 
-    # function to return the value of the first row's 
+
+
+    # function to return the value of the first row's
     # first attribute of some select query.
-    # best used for querying a single aggregate select 
+    # best used for querying a single aggregate select
     # query with no parameters
     def single_record(self, query):
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
-    
-    # function to return the value of the first row's 
+   
+    # function to return the value of the first row's
     # first attribute of some select query.
-    # best used for querying a single aggregate select 
+    # best used for querying a single aggregate select
     # query with named placeholders
     def single_record_params(self, query, dictionary):
         self.cursor.execute(query, dictionary)
         return self.cursor.fetchone()[0]
-    
-    # function to return a single attribute for all records 
+   
+    # function to return a single attribute for all records
     # from some table.
     # best used for select statements with no parameters
     def single_attribute(self, query):
@@ -67,8 +74,8 @@ class db_operations():
         results = [i[0] for i in results]
         results.remove(None)
         return results
-    
-    # function to return a single attribute for all records 
+   
+    # function to return a single attribute for all records
     # from some table.
     # best used for select statements with named placeholders
     def single_attribute_params(self, query, dictionary):
@@ -76,13 +83,13 @@ class db_operations():
         results = self.cursor.fetchall()
         results = [i[0] for i in results]
         return results
-    
+   
     # function for bulk inserting records
     # best used for inserting many records with parameters
     def bulk_insert(self, query, data):
         self.cursor.executemany(query, data)
         self.connection.commit()
-    
+   
     # function that creates patient table in our database
     def create_patient_table(self):
         query = '''
@@ -98,6 +105,7 @@ class db_operations():
         '''
         self.cursor.execute(query)
         print('patient table created')
+
 
     # function that creates appointment table in our database
     def create_appointment_table(self):
@@ -117,6 +125,7 @@ class db_operations():
         self.cursor.execute(query)
         print('appointment table created')
 
+
     # function that creates diagnosis table in our database
     def create_diagnosis_table(self):
         query = '''
@@ -128,6 +137,7 @@ class db_operations():
         '''
         self.cursor.execute(query)
         print('diagnosis table created')
+
 
     # function that creates record table in our database
     def create_record_table(self):
@@ -146,6 +156,7 @@ class db_operations():
         self.cursor.execute(query)
         print('record table created')
 
+
     # function that creates doctor table in our database
     def create_doctor_table(self):
         query = '''
@@ -156,6 +167,8 @@ class db_operations():
         '''
         self.cursor.execute(query)
         print('doctor table created')
+
+
 
 
     # function that creates doctor-record joined table in our database
@@ -172,6 +185,7 @@ class db_operations():
         self.cursor.execute(query)
         print('doctor_record table created')
 
+
     # function that creates test table in our database
     def create_test_table(self):
         query = '''
@@ -183,6 +197,7 @@ class db_operations():
         '''
         self.cursor.execute(query)
         print('test table created')
+
 
     # function that creates lab table in our database
     def create_lab_table(self):
@@ -199,6 +214,7 @@ class db_operations():
         '''
         self.cursor.execute(query)
         print('lab table created')
+
 
     # function that creates message table in our database
     def create_message_table(self):
@@ -217,6 +233,7 @@ class db_operations():
         self.cursor.execute(query)
         print('message table created')
 
+
     # function that returns if table has records
     def is_table_empty(self, table):
         #query to get count of records in table
@@ -228,19 +245,27 @@ class db_operations():
         result = self.single_record(query)
         return result == 0
 
+    def drop_table(self, table):
+        query = f"DROP TABLE IF EXISTS {table};"
+        self.cursor.execute(query)
+        print(f"{table} table dropped")
+
+
     # function to populate tables given some path
     # to a CSV containing records
     def populate_table(self, filepath, table):
         if self.is_table_empty(table):
             data = helper.data_cleaner(filepath)
             attribute_count = len(data[0])
-            
+           
             placeholders = ("%s," * attribute_count)[:-1]
             # Insert ignore for duplicates
             query = f"INSERT IGNORE INTO {table} VALUES({placeholders})"
             self.bulk_insert(query, data)
 
+
     # destructor that closes connection with DB
     def destructor(self):
         self.cursor.close()
         self.connection.close()
+
