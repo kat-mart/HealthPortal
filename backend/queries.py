@@ -1,6 +1,7 @@
 #imports
 from helper import helper
 from db_operations import db_operations
+import csv
 
 #global variables
 db_ops = db_operations("localhost")
@@ -156,7 +157,7 @@ def add_patient():
     '''
     patient_id = db_ops.select_query(select_max_id)[0][0]
     print(patient_id)
-    
+
 # select all messages between patient and doctor assuming 1-to-1 relationship
 def select_messages():
     # could be patient or doctor
@@ -361,8 +362,126 @@ def send_doctor_message():
     else:
         print("no patients found")
         
-        
 
+# query to update patiet's phone number
+def update_patient_phone():
+    data = {"patient_id" : 2, "new_phone" : "9491234567"}
+    patient_id = data["patient_id"]
+    new_phone = data["new_phone"]
+
+    update_query = '''
+    UPDATE patinet
+    SET phone = %s
+    WHERE patient_id = %s;
+    '''
+
+    db_ops.modify_query_params(update_query, (new_phone, patient_id))
+    print(f"Updated phone number for patient_id {patient_id} to {new_phone}")
+    
+# query for patients to be able to export their health records as a csv
+def export_health_records(patient_id, file_path = 'exported_health_records.csv'):
+    export_query = '''
+    SELECT r.record_id, r.date AS record_date, r.notes, d.diagnosis, d.treatment, doc.name AS doctor_name
+    FROM record r
+    INNER JOIN diagnosis d 
+        ON r.diagnosis_id = d.diagnosis_id
+    INNER JOIN doctor_record dr 
+        ON r.record_id = dr.record_id
+    INNER JOIN doctor doc
+        ON dr.doctor_id = doc.doctor_id
+    WHERE r.patient_id = %s
+    ORDER BY r.date DESC;
+    '''
+
+    records = db_ops.select_query_params(export_query, (patient_id,))
+
+    with open(file_path, mode = 'w', newline = '') as file:
+        writer = csv.writer(file)
+        # csv header
+        writer.writerow(['Record ID', 'Date', 'Notes', 'Diagnosis', 'Treatment', 'Doctor Name'])
+        for row in records:
+            writer.writerow(row)
+   
+    print(f"Health records for patient_id {patient_id} exported to {file_path}")
+
+# query to count appointments per doctor
+def count_appointments_per_doctor():
+    query = '''
+    SELECT d.name AS doctor_name, COUNT(*) AS appointment_count
+    FROM appointment a
+    JOIN doctor d 
+        ON a.doctor_id = d.doctor_id
+    GROUP BY d.name
+    ORDERY BY appointment_count DESC;
+    '''
+
+    results = db_ops.select_query(query)
+    for row in results:
+        print(f"{row[0]} has {row[1]} appointments.")
+
+# transaction query! when patients book appts, it randomly assigns a doctor, and sends that doctor and automatic message
+def book_appt_message_doctor(patient_id, date, time, status = None, reason = None):
+    try:
+        db_ops.connection.start_transaction()
+
+        # randomly assign a doctor
+        select_random_doctor = '''
+        SELECT doctor_id 
+        FROM doctor
+        ORDER BY RAND()
+        LIMIT 1;
+        '''
+
+        doctor_id = db_ops.select_query(select_random_doctor)[0][0]
+
+        # insert appointment
+        insert_appointment = '''
+        INSERT INTO appointment(date, time, status, reason, patient_id, doctor_id)
+        VALUES(%s, %s, %s, %s, %s, %s)
+        '''
+
+        db_ops.modify_query_params(insert_appointment, (date, time, status, reason, patient_id, doctor_id))
+
+        # create a message
+        message_body = f"A new appointment has been booked with patient ID {patient_id} on {date} at {time}."
+        insert_message = '''
+        INSERT INTO message(patient_id, doctor_id, message_body, timestamp)
+        VALUES(%s, %s, %s, NOW())
+        '''
+
+        db_ops.modify_query_params(insert_message, (patient_id, doctor_id, message_body))
+        
+        # commit transaction
+        db_ops.connection.commit()
+        print(f"Appointment booked and doctor (ID {doctor_id}) notified.")
+    
+    except Exception as e:
+        db_ops.connection.rollback()
+        print("Transaction failed:", e)
+
+# database view query - patient appointment summary
+def create_patient_appt_summary_view():
+    query = '''
+    CREATE VIEW patient_appt_summary AS
+    SELECT a.appointment_id, a.patient_id, p.name AS patient_name, d.name AS doctor_name, a.date, a.time, a.status, a.reason
+    FROM appointment a
+    JOIN patient p 
+        ON a.patient_id = p.patient_id
+    JOIN doctor d
+        ON a.doctor_id = d.doctor_id
+    '''
+
+    db_ops.modify_query(query)
+    print("View patient_appointment_summary created.")
+
+# database index query - search patients by their ids
+def create_index():
+    query = '''
+    CREATE INDEX index_patient_id ON appointment(patinet_id)
+    '''
+    db_ops.modify_query(query)
+    print("Index idx_patient_id created on appointment(patient_id).")
+=======
 
 def get_appointments():
     patient_id = 2
@@ -384,7 +503,7 @@ def get_appointments():
         for appointment in appointments
     ]
     helper.pretty_print(appointments_list)
-
+    
 
 # main method
 def main():
@@ -400,6 +519,15 @@ def main():
     # send_patient_message()
     # send_doctor_message()
 
+
+    create_patient_appt_summary_view()
+    create_index()
+
+    book_appt_message_doctor(
+        patient_id = 1,  
+        date = "2025-05-15",
+        time = "14:30:00"
+    )
 
     db_ops.destructor()
 
