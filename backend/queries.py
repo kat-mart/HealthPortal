@@ -21,15 +21,15 @@ def initialize_database():
     # db_ops.create_lab_table()
     # db_ops.create_message_table()
 
-    db_ops.populate_table('./csv_files/diagnosis.csv', 'diagnosis')
-    db_ops.populate_table('./csv_files/doctors.csv', 'doctor')
-    db_ops.populate_table('./csv_files/patients.csv', 'patient')
-    db_ops.populate_table('./csv_files/records.csv', 'record')
-    db_ops.populate_table('./csv_files/doctorRecords.csv', 'doctor_record')
-    db_ops.populate_table('./csv_files/appointments.csv', 'appointment')
-    db_ops.populate_table('./csv_files/tests.csv', 'test')
-    db_ops.populate_table('./csv_files/labs.csv', 'lab')
-    db_ops.populate_table('./csv_files/messages.csv', 'message')
+    # db_ops.populate_table('./csv_files/diagnosis.csv', 'diagnosis')
+    # db_ops.populate_table('./csv_files/doctors.csv', 'doctor')
+    # db_ops.populate_table('./csv_files/patients.csv', 'patient')
+    # db_ops.populate_table('./csv_files/records.csv', 'record')
+    # db_ops.populate_table('./csv_files/doctorRecords.csv', 'doctor_record')
+    # db_ops.populate_table('./csv_files/appointments.csv', 'appointment')
+    # db_ops.populate_table('./csv_files/tests.csv', 'test')
+    # db_ops.populate_table('./csv_files/labs.csv', 'lab')
+    # db_ops.populate_table('./csv_files/messages.csv', 'message')
 
 # this is a test function to display patients  
 def display_patients():
@@ -157,17 +157,226 @@ def add_patient():
     patient_id = db_ops.select_query(select_max_id)[0][0]
     print(patient_id)
     
+# select all messages between patient and doctor assuming 1-to-1 relationship
+def select_messages():
+    # could be patient or doctor
+    data = {"role": "patient", "id": 1}
+    # data = {"role": "doctor", "id": 301}
+    role = data["role"]
+    id = data["id"]
+
+    messages = ""
+    if role == "patient":
+        select_messages = '''
+        SELECT message.message_id, message.message_body, message.doctor_id, message.sender_id, doctor.name, patient.name
+        FROM message
+        INNER JOIN doctor
+            ON message.doctor_id = doctor.doctor_id
+        INNER JOIN patient
+            ON message.patient_id = patient.patient_id
+        WHERE message.patient_id = %s;
+        '''
+        messages = db_ops.select_query_params(select_messages, (id,))
+    elif role == "doctor":
+        select_messages = '''
+        SELECT message.message_id, message.message_body, message.patient_id, message.sender_id, patient.name, doctor.name
+        FROM message
+        INNER JOIN patient
+            ON message.patient_id = patient.patient_id
+        INNER JOIN doctor
+            ON message.doctor_id = doctor.doctor_id
+        WHERE message.doctor_id = %s;
+        '''
+        messages = db_ops.select_query_params(select_messages, (id,))
+    
+    all_messages = []
+
+    for message in messages:
+        message_dict = {
+            "message_id": message[0],
+            "message_body": message[1],
+            "receiver_id": message[2],
+            "sender_id" : message[3],
+            "receiver_name": message[4],
+            "sender_name": message[5]
+        }
+
+        all_messages.append(message_dict)
+
+
+# add patient's message to database
+def send_patient_message():
+    data = {"id": 3, "message_body": "Yes that works"}
+    patient_id = data["id"]
+    message_body = data["message_body"]
+
+    # check if patient has messaged a doctor already
+    select_doctor = '''
+    SELECT doctor_id
+    FROM message
+    WHERE patient_id = %s;
+    '''
+    doctor_id = db_ops.select_query_params(select_doctor, (patient_id,))
+    doctor_assigned = False
+    
+    # if message exists with a doctor then continue to send to that doctor
+    if doctor_id:
+        doctor_id = doctor_id[0][0] 
+        doctor_assigned = True
+    # if not then try to assign an available doctor
+    else: 
+        query = '''
+        SELECT doctor_id
+        FROM doctor
+        WHERE doctor_id NOT IN (SELECT doctor_id FROM message);
+        '''
+        available_doctors = db_ops.select_query(query)
+        available_doctors = [x[0] for x in available_doctors]
+
+        if available_doctors:
+            doctor_id = available_doctors[0]
+            doctor_assigned = True
+    
+    # if doctor is available then assign to the patient
+    if doctor_assigned == True:
+        # add the patient's message to the message table
+        insert_message = '''
+        INSERT INTO message(message_body, timestamp, patient_id, doctor_id, sender_id)
+        VALUES(%s, NOW(), %s, %s, %s);
+        '''
+        db_ops.modify_query_params(insert_message, (message_body, patient_id, doctor_id, patient_id))
+
+        # return the max message id
+        select_max_id = '''
+        SELECT MAX(message_id)
+        FROM message;
+        '''
+        message_id = db_ops.select_query(select_max_id)[0][0]
+        
+        # return patient name
+        select_patient_name = '''
+        SELECT name
+        FROM patient
+        WHERE patient_id = %s;
+        '''
+        sender_name = db_ops.select_query_params(select_patient_name, (patient_id,))[0][0]
+
+        # return doctor name
+        select_doctor_name = '''
+        SELECT name
+        FROM doctor
+        WHERE doctor_id = %s;
+        '''
+        receiver_name = db_ops.select_query_params(select_doctor_name, (doctor_id,))[0][0]
+
+        message = {
+            "message_id": message_id,
+            "message_body": message_body,
+            "receiver_id": doctor_id,
+            "sender_id" : patient_id,
+            "receiver_name": receiver_name,
+            "sender_name": sender_name
+        }
+        print(message)
+    # if no doctors are available
+    else:
+        print("no doctors found")
+
+
+# add doctor's message to database
+def send_doctor_message():
+    data = {"id": 305, "message_body": "Reminder for appointment tomorrow"}
+    doctor_id = data["id"]
+    message_body = data["message_body"]
+
+    # check if doctor has messaged a patient already
+    select_patient = '''
+    SELECT patient_id
+    FROM message
+    WHERE doctor_id = %s;
+    '''
+    patient_id = db_ops.select_query_params(select_patient, (doctor_id,))
+    patient_assigned = False
+    
+    # if message exists with a patient then continue to send to that patient
+    if patient_id:
+        patient_id = patient_id[0][0] 
+        patient_assigned = True
+    # if not then try to assign an available patient
+    else: 
+        query = '''
+        SELECT patient_id
+        FROM patient
+        WHERE patient_id NOT IN (SELECT patient_id FROM message);
+        '''
+        available_patients = db_ops.select_query(query)
+        available_patients = [x[0] for x in available_patients]
+
+        if available_patients:
+            patient_id = available_patients[0]
+            patient_assigned = True
+    
+    # if patient is available then assign to the doctor
+    if patient_assigned == True:
+        # add the doctor's message to the message table
+        insert_message = '''
+        INSERT INTO message(message_body, timestamp, patient_id, doctor_id, sender_id)
+        VALUES(%s, NOW(), %s, %s, %s);
+        '''
+        db_ops.modify_query_params(insert_message, (message_body, patient_id, doctor_id, doctor_id))
+
+        # return the max message id
+        select_max_id = '''
+        SELECT MAX(message_id)
+        FROM message;
+        '''
+        message_id = db_ops.select_query(select_max_id)[0][0]
+
+        # return patient name
+        select_patient_name = '''
+        SELECT name
+        FROM patient
+        WHERE patient_id = %s;
+        '''
+        receiver_name = db_ops.select_query_params(select_patient_name, (patient_id,))[0][0]
+
+        # return doctor name
+        select_doctor_name = '''
+        SELECT name
+        FROM doctor
+        WHERE doctor_id = %s;
+        '''
+        sender_name = db_ops.select_query_params(select_doctor_name, (doctor_id,))[0][0]
+
+        message = {
+            "message_id": message_id,
+            "message_body": message_body,
+            "receiver_id": patient_id,
+            "sender_id" : doctor_id,
+            "receiver_name": receiver_name,
+            "sender_name": sender_name
+        }
+        print(message)
+    # if no patients are available
+    else:
+        print("no patients found")
+        
+        
 
 # main method
 def main():
     initialize_database()
-    add_patient()
+    # add_patient()
     # display_patients()
     # verify_patient_account()
     # get_patient_profile()
     # verify_doctor_account()
     # get_doctor_profile()
     # add_doctor()
+    # select_messages()
+    # send_patient_message()
+    # send_doctor_message()
+
 
     db_ops.destructor()
 
