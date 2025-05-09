@@ -9,6 +9,9 @@ It interacts with the HealthPortal database to manage and retrieve information.
 from helper import helper
 from db_operations import db_operations
 
+# formating the date and time
+from datetime import timedelta
+
 # flask imports
 from flask import Flask, jsonify, request
 from flask_cors import CORS # allow API calls from localhost
@@ -441,7 +444,29 @@ def delete_appointment():
     else:
         return jsonify({"result": "failure", "message": "appointment_id is required."}), 400
 
+@app.route('/get-appointments', methods=['GET'])
+def get_appointments():
+    ## TODO depending on the role either get patient ID or doctor ID
+    patient_id = request.args.get("patient_id")
+    patient_id = int(patient_id)
 
+    query = '''
+    SELECT appointment_id, date, time, status, reason
+    FROM appointment
+    WHERE patient_id = %s;
+    '''
+    appointments = db_ops.select_query_params(query, (patient_id,))
+    appointments_list = [
+        {
+            "appointment_id": appointment[0],
+            "date": str(appointment[1]),
+            "time": str(appointment[2]),
+            "status": appointment[3],
+            "reason": appointment[4]
+        }
+        for appointment in appointments
+    ]
+    return jsonify({"appointments": appointments_list})
 
 # main method
 if __name__ == '__main__':
