@@ -6,6 +6,7 @@ import './Login.css';
 import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import axios from 'axios';
+import './Patient.css';
 
 export default function Patient({ role, id }) {
     const [name, setName] = useState("");
@@ -13,6 +14,7 @@ export default function Patient({ role, id }) {
     const [dob, setDob] = useState("");
     const [gender, setGender] = useState("");
     const [phone, setPhone] = useState("");
+    const [newPhone, setNewPhone] = useState(""); // state for new phone number
 
     // display patient profile
     useEffect(() => {
@@ -44,17 +46,48 @@ export default function Patient({ role, id }) {
         }
     }, [id]); // run when id changes
 
+    const [activePopup, setActivePopup] = useState(null);
+    // show or hide the popup
+    const togglePopup = (updatePhoneNum) => {
+        setActivePopup(prevState => (prevState === updatePhoneNum ? null : updatePhoneNum)); // Toggle between showing and hiding
+    };
+
+    const closePopup = () => {
+        setActivePopup(null);
+    };
+
+        
+    const handleUpdateNum = () => {
+      // TODO: Add logic to update the phone number in the backend
+    };
+
     return (
-        <div className="container">
-            <Navbar role={role} />
-            <h1>Patient Dashboard</h1>
-            <h2>Hi, {name}</h2>
-            <p>Patient ID: {id}</p>
-            <p>Email: {email}</p>
-            <p>Date of Birth: {dob}</p>
-            <p>Gender: {gender}</p>
-            <p>Phone: {phone}</p>
-        </div>
-    )
+      <div className="container">
+          <Navbar role={role} />
+          <div className="patient-dashboard">
+              <h1>Patient Dashboard</h1>
+              <h2>Hi, {name}</h2>
+              <div className="profile-card">
+                  <p><strong>Patient ID:</strong> {id}</p>
+                  <p><strong>Email:</strong> {email}</p>
+                  <p><strong>Date of Birth:</strong> {new Date(dob).toLocaleDateString()}</p>
+                  <p><strong>Gender:</strong> {gender}</p>
+                  <p><strong>Phone:</strong> {phone} 
+                    <button className="phone-update-button" onClick={() => togglePopup('Update Phone Number')}>Update</button></p>
+                    {activePopup === 'Update Phone Number' && (
+                      <div className="popup">
+                          <div className="popup-content">
+                          <button className="close-btn" onClick={closePopup}>✖</button>
+                              <h3>Update Phone Number</h3>
+                              <input type="text" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="Enter new phone number" />
+                              <button className="phone-update-button" onClick={() => {handleUpdateNum(); closePopup()}}>Submit</button>
+                          </div>
+                      </div>
+                    )}
+              </div>
+          </div>
+      </div>
+  )
+  
 }
 
