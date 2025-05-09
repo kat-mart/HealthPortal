@@ -6,7 +6,7 @@ class db_operations():
     def __init__(self, conn_path):
         self.connection = mysql.connector.connect(host=conn_path,
         user="root",
-        password="porkys27",
+        password="CPSC408!",
         auth_plugin='mysql_native_password',
         database="HealthPortal") 
         self.cursor = self.connection.cursor()
@@ -209,8 +209,9 @@ class db_operations():
             timestamp TIMESTAMP,
             patient_id INT,
             doctor_id INT,
+            sender_id INT,
             FOREIGN KEY (patient_id) REFERENCES patient(patient_id),
-            FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id)
+            FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id),
         );
         '''
         self.cursor.execute(query)
