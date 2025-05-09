@@ -481,7 +481,6 @@ def create_index():
     '''
     db_ops.modify_query(query)
     print("Index idx_patient_id created on appointment(patient_id).")
-=======
 
 def get_appointments():
     patient_id = 2
