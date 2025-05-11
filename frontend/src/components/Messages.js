@@ -11,6 +11,7 @@ function Messages({ role, pID, dID }) {
   const [userMessage, setUserMessage] = useState("")
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
+  const [unavailable, setUnavailable] = useState(false);
   const messagesEndRef = useRef(null)
   let id = null;
 
@@ -74,6 +75,9 @@ function Messages({ role, pID, dID }) {
       if (res.data.result === true) {
         setMessages(prevMessages => [...prevMessages, res.data]); // add new message to messages
       }
+      else if (res.data.result === false) {
+        setUnavailable(true); // indicate that message cannot be sent
+      }
     })
     .catch(error => {
       console.error('Error sending message to send patient message:', error);
@@ -93,7 +97,10 @@ function Messages({ role, pID, dID }) {
       <h1>Messages</h1>
       <div className="chat-box">
         <div className="messages">
-          {messages.length === 0 && <div className="empty-state">Start a chat...</div>}
+          {messages.length === 0 && !unavailable && <div className="empty-state">Start a chat...</div>}
+          {unavailable && (
+            <p>Sorry, there are currently no {role === "patient" ? "doctor" : "patient"}s to message. The system will match you with a {role === "patient" ? "doctor" : "patient"} once one is available.</p>
+          )}
           {messages.map((msg) => (
             <div key={msg.message_id} className={`message ${msg.sender_id === id ? "user" : "sender"}`}>
               <strong>{msg.sender_id === id ? msg.sender_name : msg.receiver_name} :</strong> {msg.message_body}

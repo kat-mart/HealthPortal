@@ -273,6 +273,29 @@ def create_index():
     db_ops.modify_query(query)
     print("Index idx_patient_id created on appointment(patient_id).")
 
+
+def get_appointments():
+    patient_id = 2
+
+    query = '''
+    SELECT appointment_id, date, time, status, reason, patient_id
+    FROM appointment
+    WHERE patient_id = %s;
+    '''
+    appointments = db_ops.select_query_params(query, (patient_id,))
+    appointments_list = [
+        {
+            "appointment_id": appointment[0],
+            "date": str(appointment[1]),
+            "time": str(appointment[2]),
+            "status": appointment[3],
+            "reason": appointment[4]
+        }
+        for appointment in appointments
+    ]
+    helper.pretty_print(appointments_list)
+    
+
 # main method
 def main():
     initialize_database()
