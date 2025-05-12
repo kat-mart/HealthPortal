@@ -311,14 +311,16 @@ def main():
     # send_doctor_message()
 
 
-    create_patient_appt_summary_view()
-    create_index()
+    # create_patient_appt_summary_view()
+    # create_index()
 
-    book_appt_message_doctor(
-        patient_id = 1,  
-        date = "2025-05-15",
-        time = "14:30:00"
-    )
+    # book_appt_message_doctor(
+    #     patient_id = 1,  
+    #     date = "2025-05-15",
+    #     time = "14:30:00"
+    # )
+
+    # update_patient_phone()
 
     db_ops.destructor()
 
