@@ -11,7 +11,7 @@ import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction'; 
 
-export default function Appointments({ role, pID }) {
+export default function Appointments({ role, pID, dID }) {
     const [events, setEvents] = useState([]);
     const [newEventTitle, setNewEventTitle] = useState('');
     const [newEventDate, setNewEventDate] = useState('');
@@ -33,19 +33,25 @@ export default function Appointments({ role, pID }) {
     };
 
     useEffect(() => {
-        if (!pID) return; 
-        const fetchEvents = async () => {
-            await populateEvents();
-        };
-        fetchEvents();
-    }, [pID]); 
+        if (!pID && !dID) return; 
+        // delay the call by 1 ms
+        const timer = setTimeout(() => {
+            const fetchEvents = async () => {
+                await populateEvents();
+            };
+            fetchEvents();
+        }, 1);  // 1ms delay
 
+        // cleanup timeout if the component is unmounted or if id changes
+        return () => clearTimeout(timer);
+    }, [pID, dID]); 
+    
 
     // Function to fetch events from the backend
     const populateEvents = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:5000/get-appointments', {
-                params: { patient_id: pID }
+            const response = await axios.post('http://127.0.0.1:5000/get-appointments', {
+                role: role, patient_id: pID, doctor_id: dID
             });
             const fetchedEvents = response.data.appointments.map(event => ({
                 id: event.appointment_id,
@@ -75,7 +81,9 @@ export default function Appointments({ role, pID }) {
     
             // Send the event data to the backend
             axios.post('http://127.0.0.1:5000/add-appointment', {
+                role: role,
                 patient_id: pID,
+                doctor_id: dID,
                 newEventTitle: newEventTitle,
                 newEventDate: newEventDate,
                 newEventTime: newEventTime,
