@@ -7,6 +7,8 @@ import './HealthRecords.css';
 import Navbar from './Navbar';
 
 export default function HealthRecords({ role }) {
+
+    //add function for button
     return (
         <div className="container">
             <Navbar role={role} />
@@ -15,3 +17,5 @@ export default function HealthRecords({ role }) {
         </div>
     )
 }
+
+
