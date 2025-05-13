@@ -440,41 +440,76 @@ def get_doctor_profile():
 
     return jsonify({"name": name})
 
+# add an appointment to the database
 @app.route('/add-appointment', methods=['POST'])
 def add_appointment():
     data = request.get_json()
-    find_doc = '''
-    SELECT doctor_id 
-    FROM doctor
-    ORDER BY RAND() 
-    LIMIT 1;
-    '''
-    result = db_ops.select_query(find_doc)  # This returns a list of tuples
-    doctor_id = result[0][0]
+    role = data["role"]
     patient_id = data["patient_id"]
+    doctor_id = data["doctor_id"]
     date = data["newEventDate"]
     time = data["newEventTime"]
     status = data["eventStatus"]
     reason = data["newEventTitle"]
 
-    insert_appointment = '''
-    INSERT INTO appointment(date, time, status, reason, patient_id, doctor_id)
-    VALUES(%s, %s, %s, %s, %s, %s)
-    '''
-    db_ops.modify_query_params(insert_appointment, (date, time, status, reason, patient_id, doctor_id))
+    if role == "patient":
+        find_doc = '''
+        SELECT doctor_id 
+        FROM doctor
+        ORDER BY RAND() 
+        LIMIT 1;
+        '''
+        result = db_ops.select_query(find_doc)  # This returns a list of tuples
+        assigned_doctor_id = result[0][0]
 
-    # Now fetch the newly created appointment_id
-    get_appointment_id = "SELECT LAST_INSERT_ID();"
-    appointment_id = db_ops.single_record(get_appointment_id)  # Fetch the last inserted id
+        insert_appointment = '''
+        INSERT INTO appointment(date, time, status, reason, patient_id, doctor_id)
+        VALUES(%s, %s, %s, %s, %s, %s)
+        '''
+        db_ops.modify_query_params(insert_appointment, (date, time, status, reason, patient_id, assigned_doctor_id))
 
-    return jsonify({
-        "result": "success",
-        "appointment_id": appointment_id,  # Return the appointment_id
-        "title": reason,
-        "newEventDate": date,
-        "newEventTime": time,
-        "eventStatus": status
-    })
+        # Now fetch the newly created appointment_id
+        get_appointment_id = "SELECT LAST_INSERT_ID();"
+        appointment_id = db_ops.single_record(get_appointment_id)  # Fetch the last inserted id
+
+        return jsonify({
+            "result": "success",
+            "appointment_id": appointment_id,  # Return the appointment_id
+            "title": reason,
+            "newEventDate": date,
+            "newEventTime": time,
+            "eventStatus": status
+        })
+    
+    elif role == "doctor":
+        find_patient = '''
+        SELECT patient_id 
+        FROM patient
+        ORDER BY RAND() 
+        LIMIT 1;
+        '''
+        result = db_ops.select_query(find_patient)  # This returns a list of tuples
+        assigned_patient_id = result[0][0]
+
+        insert_appointment = '''
+        INSERT INTO appointment(date, time, status, reason, patient_id, doctor_id)
+        VALUES(%s, %s, %s, %s, %s, %s)
+        '''
+        db_ops.modify_query_params(insert_appointment, (date, time, status, reason, assigned_patient_id, doctor_id))
+
+        # Now fetch the newly created appointment_id
+        get_appointment_id = "SELECT LAST_INSERT_ID();"
+        appointment_id = db_ops.single_record(get_appointment_id)  # Fetch the last inserted id
+
+        return jsonify({
+            "result": "success",
+            "appointment_id": appointment_id,  # Return the appointment_id
+            "title": reason,
+            "newEventDate": date,
+            "newEventTime": time,
+            "eventStatus": status
+        })
+        
 
 # delete an appointment on click
 @app.route('/delete-appointment', methods=['POST'])
@@ -491,29 +526,52 @@ def delete_appointment():
     else:
         return jsonify({"result": "failure", "message": "appointment_id is required."}), 400
 
-@app.route('/get-appointments', methods=['GET'])
+# gets all appointments based on patient_id or doctor_id
+@app.route('/get-appointments', methods=['POST'])
 def get_appointments():
-    ## TODO depending on the role either get patient ID or doctor ID
-    patient_id = request.args.get("patient_id")
-    patient_id = int(patient_id)
+    data = request.get_json()
+    role = data["role"]
+    patient_id = data["patient_id"]
+    doctor_id = data["doctor_id"]
 
-    query = '''
-    SELECT appointment_id, date, time, status, reason
-    FROM appointment
-    WHERE patient_id = %s;
-    '''
-    appointments = db_ops.select_query_params(query, (patient_id,))
-    appointments_list = [
-        {
-            "appointment_id": appointment[0],
-            "date": str(appointment[1]),
-            "time": str(appointment[2]),
-            "status": appointment[3],
-            "reason": appointment[4]
-        }
-        for appointment in appointments
-    ]
-    return jsonify({"appointments": appointments_list})
+    if role == "patient":
+        query = '''
+        SELECT appointment_id, date, time, status, reason
+        FROM appointment
+        WHERE patient_id = %s;
+        '''
+        appointments = db_ops.select_query_params(query, (patient_id,))
+        appointments_list = [
+            {
+                "appointment_id": appointment[0],
+                "date": str(appointment[1]),
+                "time": str(appointment[2]),
+                "status": appointment[3],
+                "reason": appointment[4]
+            }
+            for appointment in appointments
+        ]
+        return jsonify({"appointments": appointments_list})
+    
+    elif role == "doctor":
+        query = '''
+        SELECT appointment_id, date, time, status, reason
+        FROM appointment
+        WHERE doctor_id = %s;
+        '''
+        appointments = db_ops.select_query_params(query, (doctor_id,))
+        appointments_list = [
+            {
+                "appointment_id": appointment[0],
+                "date": str(appointment[1]),
+                "time": str(appointment[2]),
+                "status": appointment[3],
+                "reason": appointment[4]
+            }
+            for appointment in appointments
+        ]
+        return jsonify({"appointments": appointments_list})
+
 
 # main method
 if __name__ == '__main__':
