@@ -196,7 +196,7 @@ def export_health_records(patient_id, file_path='exported_health_records.csv'):
     print(f"Health records for patient_id {patient_id} exported to {file_path}")
 
 
-def count_appointments_per_doctor():
+def count_appointments_per_doctor(): #do next 
     query = '''
     SELECT d.name AS doctor_name, COUNT(*) AS appointment_count
     FROM appointment a
@@ -250,20 +250,20 @@ def book_appt_message_doctor(patient_id, date, time, status = None, reason = Non
         db_ops.connection.rollback()
         print("Transaction failed:", e)
 
-# database view query - patient appointment summary
-def create_patient_appt_summary_view():
-    query = '''
-    CREATE VIEW patient_appt_summary AS
-    SELECT a.appointment_id, a.patient_id, p.name AS patient_name, d.name AS doctor_name, a.date, a.time, a.status, a.reason
-    FROM appointment a
-    JOIN patient p 
-        ON a.patient_id = p.patient_id
-    JOIN doctor d
-        ON a.doctor_id = d.doctor_id
-    '''
+# database view query - patient appointment summary, not working on my end 
+# def create_patient_appt_summary_view():
+#     query = '''
+#     CREATE VIEW patient_appt_summary AS
+#     SELECT a.appointment_id, a.patient_id, p.name AS patient_name, d.name AS doctor_name, a.date, a.time, a.status, a.reason
+#     FROM appointment a
+#     JOIN patient p 
+#         ON a.patient_id = p.patient_id
+#     JOIN doctor d
+#         ON a.doctor_id = d.doctor_id
+#     '''
 
-    db_ops.modify_query(query)
-    print("View patient_appointment_summary created.")
+#     db_ops.modify_query(query)
+#     print("View patient_appointment_summary created.")
 
 # database index query - search patients by their ids
 def create_index():
@@ -311,6 +311,16 @@ def main():
     # send_doctor_message()
 
 
+
+    #create_patient_appt_summary_view()
+    create_index()
+
+    book_appt_message_doctor(
+        patient_id = 1,  
+        date = "2025-05-15",
+        time = "14:30:00"
+    )
+
     # create_patient_appt_summary_view()
     # create_index()
 
@@ -321,6 +331,7 @@ def main():
     # )
 
     # update_patient_phone()
+
 
     db_ops.destructor()
 
