@@ -203,7 +203,7 @@ def count_appointments_per_doctor(): #do next
     JOIN doctor d 
         ON a.doctor_id = d.doctor_id
     GROUP BY d.name
-    ORDERY BY appointment_count DESC;
+    ORDER BY appointment_count DESC;
     '''
 
     results = db_ops.select_query(query)
