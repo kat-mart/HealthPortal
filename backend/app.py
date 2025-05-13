@@ -17,6 +17,11 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS # allow API calls from localhost
 import atexit # used to close database connection when the application exits
 
+# export records
+from flask import send_file
+import csv
+import io
+
 # initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -525,6 +530,42 @@ def get_appointments():
         ]
         return jsonify({"appointments": appointments_list})
 
+# export patient's health records
+@app.route('/export-health-records', methods=['POST'])
+def export_health_records():
+    data = request.get_json()
+    patient_id = data["patient_id"]
+
+    export_query = '''
+    SELECT r.record_id, r.date AS record_date, r.notes, d.diagnosis, d.treatment, doc.name AS doctor_name
+    FROM record r
+    INNER JOIN diagnosis d ON r.diagnosis_id = d.diagnosis_id
+    INNER JOIN doctor_record dr ON r.record_id = dr.record_id
+    INNER JOIN doctor doc ON dr.doctor_id = doc.doctor_id
+    WHERE r.patient_id = %s
+    ORDER BY r.date DESC;
+    '''
+    records = db_ops.select_query_params(export_query, (patient_id,))
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Record ID', 'Date', 'Notes', 'Diagnosis', 'Treatment', 'Doctor Name'])
+    writer.writerows(records)
+    output.seek(0)  # Go to the start of the stream and output
+
+    # Convert to a BytesIO object to send as a file
+    mem = io.BytesIO()
+    mem.write(output.getvalue().encode('utf-8')) # convert to bytes
+    mem.seek(0)
+    output.close()
+
+    return send_file(
+        mem,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='health_records.csv'
+    )
 
 # main method
 if __name__ == '__main__':
