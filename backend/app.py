@@ -525,6 +525,26 @@ def delete_appointment():
         return jsonify({"result": "success", "message": f"Appointment {appointment_id} deleted."})
     else:
         return jsonify({"result": "failure", "message": "appointment_id is required."}), 400
+    
+
+#count doctor appointment
+@app.route('/count-appointment', methods = ['POST'])
+def count_appointment():
+    data = request.get_json()
+    appointment_id = data.get('appointment_id')
+    query = '''
+    SELECT d.name AS doctor_name, COUNT(*) AS appointment_count
+    FROM appointment a
+    JOIN doctor d 
+        ON a.doctor_id = d.doctor_id
+    GROUP BY d.name
+    ORDER BY appointment_count DESC;
+    '''
+    results = db_ops.select_query(query) 
+
+    output = [{"doctor_name": row[0], "appointment_count": row[1]} for row in results]
+
+    return jsonify(output)
 
 # gets all appointments based on patient_id or doctor_id
 @app.route('/get-appointments', methods=['POST'])
