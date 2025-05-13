@@ -294,6 +294,26 @@ def get_appointments():
         for appointment in appointments
     ]
     helper.pretty_print(appointments_list)
+
+
+# 3 inner joins - function that returns all lab test results per patient request
+def lab_results(patient_id):
+    query = '''
+    SELECT p.name AS patientName, t.test_name, l.result, l.date AS labDate, a.date AS apptDate, a.time AS apptTime
+    FROM lab l
+    INNER JOIN test t 
+        ON l.test_id = t.test_id
+    INNER JOIN patient p 
+        ON l.patient_id = p.patient_id
+    INNER JOIN appointment a
+        ON p.patient_id = a.patient_id
+    WHERE patient_id = %s
+    ORDER BY l.date DESC;
+    '''
+
+    results = db_ops.select_query_params(query, (patient_id,))
+    for row in results:
+        print(f"{row[0]} had a '{row[1]}' test with result '{row[2]}' on '{row[3]}'. This was a follow up from their appointment on '{row[4]}' at '{row[5]}'.")
     
 
 # main method
