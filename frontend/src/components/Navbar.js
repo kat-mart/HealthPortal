@@ -50,8 +50,8 @@ export default function Navbar({ role }) {
                     <li>
                         <Link to='/Appointments' onClick={closeNav}>Appointments</Link>
                     </li>
-                    {/* Render health records only if the role is 'doctor' */}
-                    {role === 'doctor' &&
+                    {/* Render health records only if the role is 'patient' */}
+                    {role === 'patient' &&
                     <li>
                         <Link to='/HealthRecords' onClick={closeNav}>Health Records</Link>
                     </li>
