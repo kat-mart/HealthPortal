@@ -551,6 +551,27 @@ def count_appointment():
 
     return jsonify(output)
 
+#lab results - 3 inner joins 
+@app.route('/lab-results',methods = ['POST'])
+def get_lab_results():
+    data = request.get_json()
+    patient_id = data["patient_id"]
+    query = '''
+    SELECT p.name AS patientName, t.test_name, l.result, l.date AS labDate, a.date AS apptDate, a.time AS apptTime
+    FROM lab l
+    INNER JOIN test t 
+        ON l.test_id = t.test_id
+    INNER JOIN patient p 
+        ON l.patient_id = p.patient_id
+    INNER JOIN appointment a
+        ON p.patient_id = a.patient_id
+    WHERE patient_id = %s
+    ORDER BY l.date DESC;
+    '''
+    results = db_ops.select_query_params(query, (patient_id,))
+    for row in results:
+        print(f"{row[0]} had a '{row[1]}' test with result '{row[2]}' on '{row[3]}'. This was a follow up from their appointment on '{row[4]}' at '{row[5]}'.")
+
 # gets all appointments based on patient_id or doctor_id
 @app.route('/get-appointments', methods=['POST'])
 def get_appointments():
