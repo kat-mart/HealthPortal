@@ -58,8 +58,30 @@ export default function Patient({ role, id }) {
 
         
     const handleUpdateNum = () => {
+      const updatePhone = () => {
       // TODO: Add logic to update the phone number in the backend
-    };
+      fetch('http://127.0.0.1:5000/update-patient-phone',{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          patient_id: id,
+          phone: newPhone
+        })
+    })
+    .then(res => res.json())
+    .then(data =>{
+      console.log('Phone update:', data);
+      setPhone(newPhone);
+      setNewPhone("");
+    })
+    .catch(error => {
+      console.error('Error updating phone number:', error);
+    })
+  };
+  updatePhone();
+};
 
     return (
       <div className="container">

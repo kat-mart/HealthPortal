@@ -196,14 +196,14 @@ def export_health_records(patient_id, file_path='exported_health_records.csv'):
     print(f"Health records for patient_id {patient_id} exported to {file_path}")
 
 
-def count_appointments_per_doctor():
+def count_appointments_per_doctor(): #do next 
     query = '''
     SELECT d.name AS doctor_name, COUNT(*) AS appointment_count
     FROM appointment a
     JOIN doctor d 
         ON a.doctor_id = d.doctor_id
     GROUP BY d.name
-    ORDERY BY appointment_count DESC;
+    ORDER BY appointment_count DESC;
     '''
 
     results = db_ops.select_query(query)
@@ -250,20 +250,20 @@ def book_appt_message_doctor(patient_id, date, time, status = None, reason = Non
         db_ops.connection.rollback()
         print("Transaction failed:", e)
 
-# database view query - patient appointment summary
-def create_patient_appt_summary_view():
-    query = '''
-    CREATE VIEW patient_appt_summary AS
-    SELECT a.appointment_id, a.patient_id, p.name AS patient_name, d.name AS doctor_name, a.date, a.time, a.status, a.reason
-    FROM appointment a
-    JOIN patient p 
-        ON a.patient_id = p.patient_id
-    JOIN doctor d
-        ON a.doctor_id = d.doctor_id
-    '''
+# database view query - patient appointment summary, not working on my end 
+# def create_patient_appt_summary_view():
+#     query = '''
+#     CREATE VIEW patient_appt_summary AS
+#     SELECT a.appointment_id, a.patient_id, p.name AS patient_name, d.name AS doctor_name, a.date, a.time, a.status, a.reason
+#     FROM appointment a
+#     JOIN patient p 
+#         ON a.patient_id = p.patient_id
+#     JOIN doctor d
+#         ON a.doctor_id = d.doctor_id
+#     '''
 
-    db_ops.modify_query(query)
-    print("View patient_appointment_summary created.")
+#     db_ops.modify_query(query)
+#     print("View patient_appointment_summary created.")
 
 # database index query - search patients by their ids
 def create_index():
@@ -294,6 +294,26 @@ def get_appointments():
         for appointment in appointments
     ]
     helper.pretty_print(appointments_list)
+
+
+# 3 inner joins - function that returns all lab test results per patient request
+def lab_results(patient_id):
+    query = '''
+    SELECT p.name AS patientName, t.test_name, l.result, l.date AS labDate, a.date AS apptDate, a.time AS apptTime
+    FROM lab l
+    INNER JOIN test t 
+        ON l.test_id = t.test_id
+    INNER JOIN patient p 
+        ON l.patient_id = p.patient_id
+    INNER JOIN appointment a
+        ON p.patient_id = a.patient_id
+    WHERE patient_id = %s
+    ORDER BY l.date DESC;
+    '''
+
+    results = db_ops.select_query_params(query, (patient_id,))
+    for row in results:
+        print(f"{row[0]} had a '{row[1]}' test with result '{row[2]}' on '{row[3]}'. This was a follow up from their appointment on '{row[4]}' at '{row[5]}'.")
     
 
 # main method
@@ -311,6 +331,16 @@ def main():
     # send_doctor_message()
 
 
+
+    #create_patient_appt_summary_view()
+    create_index()
+
+    book_appt_message_doctor(
+        patient_id = 1,  
+        date = "2025-05-15",
+        time = "14:30:00"
+    )
+
     # create_patient_appt_summary_view()
     # create_index()
 
@@ -321,6 +351,7 @@ def main():
     # )
 
     # update_patient_phone()
+
 
     db_ops.destructor()
 

@@ -8,6 +8,7 @@ It interacts with the HealthPortal database to manage and retrieve information.
 # imports
 from helper import helper
 from db_operations import db_operations
+import csv 
 
 # formating the date and time
 from datetime import timedelta
@@ -315,6 +316,52 @@ def add_patient():
 
     return jsonify({"patient_id": patient_id})
 
+#NEW:Updating the patient's phone- CM
+@app.route('/update-patient-phone', methods = ['POST'])
+def update_patient_phone():
+    data = request.get_json()
+    phone = data["phone"]
+    patient_id = data["patient_id"]
+    update_query = '''
+    UPDATE patient
+    SET phone = %s
+    WHERE patient_id = %s;
+    '''
+    db_ops.modify_query_params(update_query, (phone,patient_id))
+    return jsonify({"patient_id": patient_id})
+
+#NEW: Exporting health records- CM
+@app.route('/export-health-record', methods = ['POST'])
+def export_health_records():
+    data = request.get_json()
+    patient_id = data["patient_id"]
+    # record_id = data["record_id"] //get rid of this 
+    # date = data["date"]
+    # notes = data["notes"]
+    # diagnosis = data["diagnosis"]
+    # treatment = data["treatment"]
+    export_query = '''
+    SELECT r.record_id, r.date AS record_date, r.notes, d.diagnosis, d.treatment, doc.name AS doctor_name
+    FROM record r
+    INNER JOIN diagnosis d ON r.diagnosis_id = d.diagnosis_id
+    INNER JOIN doctor_record dr ON r.record_id = dr.record_id
+    INNER JOIN doctor doc ON dr.doctor_id = doc.doctor_id
+    WHERE r.patient_id = %s
+    ORDER BY r.date DESC;
+    '''
+    records = db_ops.select_query_params(export_query,(patient_id))
+    file_path = f'exported_health_records_patient_{patient_id}.csv'
+    with open(file_path, mode = 'w', newline= '') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Record ID', 'Date', 'Notes', 'Diagnosis', 'Treatment', 'Doctor Name'])
+        writer.writerows(records)
+
+    return jsonify({
+        "result": "success",
+        "file_path": file_path
+    })
+
+
 
 
 # get patient personal details based on patient_id
@@ -483,6 +530,26 @@ def delete_appointment():
         return jsonify({"result": "success", "message": f"Appointment {appointment_id} deleted."})
     else:
         return jsonify({"result": "failure", "message": "appointment_id is required."}), 400
+    
+
+#count doctor appointment
+@app.route('/count-appointment', methods = ['POST'])
+def count_appointment():
+    data = request.get_json()
+    appointment_id = data.get('appointment_id')
+    query = '''
+    SELECT d.name AS doctor_name, COUNT(*) AS appointment_count
+    FROM appointment a
+    JOIN doctor d 
+        ON a.doctor_id = d.doctor_id
+    GROUP BY d.name
+    ORDER BY appointment_count DESC;
+    '''
+    results = db_ops.select_query(query) 
+
+    output = [{"doctor_name": row[0], "appointment_count": row[1]} for row in results]
+
+    return jsonify(output)
 
 # gets all appointments based on patient_id or doctor_id
 @app.route('/get-appointments', methods=['POST'])
