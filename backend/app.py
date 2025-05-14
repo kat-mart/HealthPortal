@@ -542,7 +542,6 @@ def get_lab_results():
     for row in results:
         print(f"{row[0]} had a '{row[1]}' test with result '{row[2]}' on '{row[3]}'. This was a follow up from their appointment on '{row[4]}' at '{row[5]}'.")
 
-# gets all appointments based on patient_id or doctor_id
 @app.route('/get-appointments', methods=['POST'])
 def get_appointments():
     data = request.get_json()
@@ -557,17 +556,6 @@ def get_appointments():
         WHERE patient_id = %s;
         '''
         appointments = db_ops.select_query_params(query, (patient_id,))
-        appointments_list = [
-            {
-                "appointment_id": appointment[0],
-                "date": str(appointment[1]),
-                "time": str(appointment[2]),
-                "status": appointment[3],
-                "reason": appointment[4]
-            }
-            for appointment in appointments
-        ]
-        return jsonify({"appointments": appointments_list})
     
     elif role == "doctor":
         query = '''
@@ -576,7 +564,11 @@ def get_appointments():
         WHERE doctor_id = %s;
         '''
         appointments = db_ops.select_query_params(query, (doctor_id,))
-        appointments_list = [
+    
+    else:
+        return jsonify({"appointments": []})  # Invalid role
+
+    appointments_list = [
             {
                 "appointment_id": appointment[0],
                 "date": str(appointment[1]),
@@ -586,7 +578,12 @@ def get_appointments():
             }
             for appointment in appointments
         ]
-        return jsonify({"appointments": appointments_list})
+# Convert into desired format for FullCalendar
+    for appointment in appointments_list:
+        if len(appointment["time"]) == 7:
+            appointment["time"] = "0" + appointment["time"]
+
+    return jsonify({"appointments": appointments_list})
 
 # export patient's health records
 @app.route('/export-health-records', methods=['POST'])
