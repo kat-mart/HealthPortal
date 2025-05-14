@@ -42,7 +42,9 @@ export default function Doctor({ role, id }) {
             <Navbar role={role} />
             <h1>Doctor Dashboard</h1>
             <h2>Hi, {name}</h2>
-            <p>Doctor ID: {id}</p>
+            <div className="profile-card">
+              <p><strong>Doctor ID: </strong>{id}</p>
+            </div>
         </div>
     )
 }

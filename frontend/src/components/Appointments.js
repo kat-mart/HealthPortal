@@ -17,6 +17,12 @@ export default function Appointments({ role, pID, dID }) {
     const [newEventDate, setNewEventDate] = useState('');
     const [newEventTime, setNewEventTime] = useState('');
     const [eventStatus, setEventStatus] = useState("Pending"); 
+    const [appointmentCount, setAppointmentCount] = useState(""); // State to hold appointment count
+    const [isVisible, setIsVisible] = useState(false); 
+
+    const toggleVisibility = () => {
+    setIsVisible(!isVisible);  // visibility for appointment count
+    };
 
     const handleDateClick = (arg) => {
         alert('Date clicked: ' + arg.dateStr);
@@ -66,6 +72,27 @@ export default function Appointments({ role, pID, dID }) {
         }
     };
     
+    // count the number of appointments per doctor
+    const app_count = async () => {
+        try {
+            const response = await axios.post('http://127.0.0.1:5000/count-appointment', {
+                role: 'doctor', // Only doctors can see the appointment count
+            });
+
+            if (response.data && response.data.length > 0) {
+                const doctorCounts = response.data.map(doctor => ({
+                    doctorName: doctor.doctor_name,
+                    appointmentCount: doctor.appointment_count
+                }));
+                setAppointmentCount(doctorCounts);
+            } else {
+                setAppointmentCount([]); // Set to an empty array if no appointments are found
+            }
+        } catch (error) {
+            console.error('Error fetching appointment count:', error);
+            alert('Failed to load appointment count.');
+        }
+    }
 
     // adding a new event to the calendar
     const handleAddEvent = () => {
@@ -137,6 +164,31 @@ export default function Appointments({ role, pID, dID }) {
         <div className='container'>
             <Navbar role={role} />
             <h1>Your Events</h1>
+                {role === 'doctor' && (
+                    <>
+                        <button className="button" onClick={() => { app_count(); toggleVisibility(); }}>
+                            {isVisible ? 'Hide Appointment Count' : 'View Appointment Count'}
+                        </button>
+
+                        {/* Display the appointment count -- only doctors can see */}
+                        {isVisible && appointmentCount !== null && appointmentCount.length > 0 ? (
+                            <div className="appointment-count">
+                                <h3>Appointment Counts by Doctor:</h3>
+                                <ul>{appointmentCount.map((doctor, index) => (
+                                        <li key={index}>
+                                            {doctor.doctorName}: {doctor.appointmentCount}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : isVisible &&(
+                            <div className="appointment-count">
+                                <h3>No appointments found.</h3>
+                            </div>
+                        )}
+                        <p></p>
+                    </>
+                )}
                 <button className='button' onClick={() => togglePopup('Add Event')}>Add Event</button>
 
                 {activePopup === 'Add Event' && (
