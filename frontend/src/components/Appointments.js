@@ -39,39 +39,36 @@ export default function Appointments({ role, pID, dID }) {
     };
 
     useEffect(() => {
-        if (!pID && !dID) return; 
-        // delay the call by 1 ms
+        if (!pID && !dID) return;
+
         const timer = setTimeout(() => {
             const fetchEvents = async () => {
-                await populateEvents();
+                try {
+                    const response = await axios.post('http://127.0.0.1:5000/get-appointments', {
+                        role: role,
+                        patient_id: pID,
+                        doctor_id: dID
+                    });
+                    const fetchedEvents = response.data.appointments.map(event => ({
+                        id: event.appointment_id,
+                        start: `${event.date}T${event.time}`, 
+                        color: event.status === "Confirmed" ? "#28a745" : "#ffc107",
+                        title: event.reason
+                    }));
+                    setEvents(fetchedEvents);
+                    console.log('Fetched events:', fetchedEvents);
+                } catch (error) {
+                    console.error('Error fetching events:', error);
+                }
             };
+
             fetchEvents();
-        }, 1);  // 1ms delay
+        }, 1);
 
-        // cleanup timeout if the component is unmounted or if id changes
-        return () => clearTimeout(timer);
-    }, [pID, dID]); 
-    
+    return () => clearTimeout(timer);
+}, [pID, dID, role]); 
 
-    // Function to fetch events from the backend
-    const populateEvents = async () => {
-        try {
-            const response = await axios.post('http://127.0.0.1:5000/get-appointments', {
-                role: role, patient_id: pID, doctor_id: dID
-            });
-            const fetchedEvents = response.data.appointments.map(event => ({
-                id: event.appointment_id,
-                date: `${event.date} ${event.time}`,
-                color: event.status === "Confirmed" ? "#28a745" : "#ffc107",
-                title: event.reason
-            }));
-            setEvents(fetchedEvents);
-            console.log('Fetched events:', fetchedEvents);
-        } catch (error) {
-            console.error('Error fetching events:', error);
-        }
-    };
-    
+
     // count the number of appointments per doctor
     const app_count = async () => {
         try {
@@ -97,12 +94,12 @@ export default function Appointments({ role, pID, dID }) {
     // adding a new event to the calendar
     const handleAddEvent = () => {
         if (newEventTitle && newEventDate && newEventTime) {
-            const dateTime = `${newEventDate} ${newEventTime}`; // Combine date and time
+            // const dateTime = `${newEventDate}T${newEventTime}`; // Combine date and time
     
-            // Create the new event object (this will be used for FullCalendar)
+            // Create the new event object -for FullCalendar
             const newEvent = {
                 title: newEventTitle,
-                date: dateTime,
+                start: `${newEventDate}T${newEventTime}`,
                 color: eventStatus === "Confirmed" ? "#28a745" : "#ffc107", // green if confirmed, yellow if not
             };
     
@@ -117,7 +114,6 @@ export default function Appointments({ role, pID, dID }) {
                 eventStatus: eventStatus,
             })
             .then(response => {
-                // Once the backend returns the response with the appointment_id
                 newEvent.id = response.data.appointment_id; // Use the returned appointment_id as the FullCalendar event ID
     
                 // Add the new event with the real appointment_id to FullCalendar
