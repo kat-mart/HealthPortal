@@ -314,7 +314,74 @@ def lab_results(patient_id):
     results = db_ops.select_query_params(query, (patient_id,))
     for row in results:
         print(f"{row[0]} had a '{row[1]}' test with result '{row[2]}' on '{row[3]}'. This was a follow up from their appointment on '{row[4]}' at '{row[5]}'.")
-    
+
+
+# create stored procedure for adding a patient
+def create_sp_insert_patient():
+    sp_query = '''
+    DELIMITER $$
+    CREATE PROCEDURE sp_insert_patient(
+        IN p_name VARCHAR(20),
+        IN p_email VARCHAR(20),
+        IN p_password VARCHAR(20),
+        IN p_dob DATE,
+        IN p_gender CHAR(1),
+        IN p_phone VARCHAR(20))
+
+    BEGIN
+        START TRANSACTION;
+        
+        INSERT INTO patient(name, email, password, dob, gender, phone)
+        VALUES(p_name, p_email, p_password, p_dob, p_gender, p_phone);
+
+        SELECT COUNT(email) INTO @email_count
+        FROM patient
+        WHERE email = p_email;
+
+        IF @email_count = 1 THEN
+            COMMIT;
+        ELSE
+            ROLLBACK;
+        END IF;
+    END $$
+    DELIMITER;
+    '''
+    db_ops.modify_query(sp_query)
+
+# call the stored procedure for adding a patient
+def call_sp_insert_patient():
+    select_max_id = '''
+    SELECT MAX(patient_id)
+    FROM patient;
+    '''
+    max_patient_id = db_ops.select_query(select_max_id)[0][0]
+
+    data = {
+        "name": "Lea",
+        "email": "lea@email.com",
+        "password": "4567",
+        "dob": "1988-01-01",
+        "gender": "F",
+        "phone": "666-333-2222"
+    }
+    name = data["name"]
+    email = data["email"]
+    password = data["password"]
+    dob = data["dob"]
+    gender = data["gender"]
+    phone = data["phone"]
+    call_query = '''
+    CALL sp_insert_patient(%s, %s, %s, %s, %s, %s);
+    '''
+    db_ops.modify_query_params(call_query, (name, email, password, dob, gender, phone))
+
+    new_max_patient_id = db_ops.select_query(select_max_id)[0][0]
+
+    if max_patient_id == new_max_patient_id:
+        pass # return error
+    else:
+        pass # return max_patient_id
+
 
 # main method
 def main():
@@ -333,13 +400,13 @@ def main():
 
 
     #create_patient_appt_summary_view()
-    create_index()
+    # create_index()
 
-    book_appt_message_doctor(
-        patient_id = 1,  
-        date = "2025-05-15",
-        time = "14:30:00"
-    )
+    # book_appt_message_doctor(
+    #     patient_id = 1,  
+    #     date = "2025-05-15",
+    #     time = "14:30:00"
+    # )
 
     # create_patient_appt_summary_view()
     # create_index()
@@ -351,6 +418,9 @@ def main():
     # )
 
     # update_patient_phone()
+
+    # create_sp_insert_patient()
+    # call_sp_insert_patient()
 
 
     db_ops.destructor()
