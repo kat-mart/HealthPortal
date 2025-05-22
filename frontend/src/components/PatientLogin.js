@@ -18,6 +18,7 @@ export default function PatientLogin({ setId }) {
     const [gender, setGender] = useState("");
     const [phone, setPhone] = useState("");
     const [signInError, setSignInError] = useState(false);
+    const [signUpError, setSignUpError] = useState(false);
 
     // saves user's choice when they click sign up or sign in
     const handleChoice = (input) => {
@@ -47,7 +48,6 @@ export default function PatientLogin({ setId }) {
             } 
             else if (result === "error") {
                 setSignInError(true);
-                console.log(signInError)
             }
         })
         .catch(error => {
@@ -70,15 +70,17 @@ export default function PatientLogin({ setId }) {
         })
         .then(res => {
             console.log('Response from patient sign up server', res.data);
-            setId(res.data.patient_id)
-            navigate('/Patient'); //redirect to patient sign up 
-
+            if (res.data.patient_id === -1) {
+                setSignUpError(true);
+            }
+            else {
+                setId(res.data.patient_id)
+                navigate('/Patient'); // redirect to Patient page after sign up
+            }
         })
         .catch(error => {
             console.error('Error sending message to patient sign up:', error)
         });
-        
-        
     }
 
     return (
@@ -153,6 +155,7 @@ export default function PatientLogin({ setId }) {
                         </div>
                         <button onClick={(e) => handleSignUp(e)} type="submit">Sign Up</button>
                     </form>
+                    {signUpError && (<p>Invalid. An account with this email already exists.</p>)}
                     <button onClick={() => setSignUp(false)}>Back</button>
                 </div>
             ) : null}

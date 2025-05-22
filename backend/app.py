@@ -292,29 +292,57 @@ def verify_patient_account():
         return jsonify({"result": result})
     
 # add a new patient to the database
+# @app.route('/patient-sign-up', methods=['POST'])
+# def add_patient():
+#     data = request.get_json()
+#     email = data["email"]
+#     password = data["password"]
+#     name = data["name"]
+#     dob = data["dob"]
+#     gender = data["gender"]
+#     phone = data["phone"]
+
+#     insert_patient = '''
+#     INSERT INTO patient(email,password,name,dob,gender,phone)
+#     VALUES (%s, %s, %s, %s, %s, %s)
+#     '''
+#     db_ops.modify_query_params(insert_patient,(email,password,name,dob,gender,phone))
+
+#     select_max_id= '''
+#     SELECT MAX(patient_id)
+#     FROM patient;
+#     '''
+#     patient_id = db_ops.select_query(select_max_id)[0][0]
+
+#     return jsonify({"patient_id": patient_id})
+
+# call the stored procedure for adding a patient
 @app.route('/patient-sign-up', methods=['POST'])
-def add_patient():
-    data = request.get_json()
-    email = data["email"]
-    password = data["password"]
-    name = data["name"]
-    dob = data["dob"]
-    gender = data["gender"]
-    phone = data["phone"]
-
-    insert_patient = '''
-    INSERT INTO patient(email,password,name,dob,gender,phone)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    '''
-    db_ops.modify_query_params(insert_patient,(email,password,name,dob,gender,phone))
-
-    select_max_id= '''
+def call_sp_insert_patient():
+    select_max_id = '''
     SELECT MAX(patient_id)
     FROM patient;
     '''
-    patient_id = db_ops.select_query(select_max_id)[0][0]
+    max_patient_id = db_ops.select_query(select_max_id)[0][0]
 
-    return jsonify({"patient_id": patient_id})
+    data = request.get_json()
+    name = data["name"]
+    email = data["email"]
+    password = data["password"]
+    dob = data["dob"]
+    gender = data["gender"]
+    phone = data["phone"]
+    call_query = '''
+    CALL sp_insert_patient(%s, %s, %s, %s, %s, %s);
+    '''
+    db_ops.modify_query_params(call_query, (name, email, password, dob, gender, phone))
+
+    new_max_patient_id = db_ops.select_query(select_max_id)[0][0]
+
+    if max_patient_id == new_max_patient_id:
+        return jsonify({"patient_id": -1})
+    else:
+        return jsonify({"patient_id": new_max_patient_id})
 
 #NEW:Updating the patient's phone- CM
 @app.route('/update-patient-phone', methods = ['POST'])
