@@ -112,7 +112,7 @@ export default function PatientLogin({ setId }) {
                         <button onClick={(e) => handleSignIn(e)} type="submit">Sign In</button>
                     </form>
                     {signInError && (<p>Invalid email or password.</p>)}
-                    <button onClick={() => setSignIn(false)}>Back</button>
+                    <button className='back-button' onClick={() => setSignIn(false)}>Back</button>
                 </div>
             ) : null}
 
@@ -156,7 +156,7 @@ export default function PatientLogin({ setId }) {
                         <button onClick={(e) => handleSignUp(e)} type="submit">Sign Up</button>
                     </form>
                     {signUpError && (<p>Invalid. An account with this email already exists.</p>)}
-                    <button onClick={() => setSignUp(false)}>Back</button>
+                    <button className='back-button' onClick={() => setSignUp(false)}>Back</button>
                 </div>
             ) : null}
         </div>

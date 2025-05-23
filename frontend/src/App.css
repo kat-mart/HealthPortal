@@ -2,9 +2,10 @@
   text-align: center;
 }
 
+
 button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: #3a99ff;
   color: white;
   text-align: center;
   text-decoration: none;
@@ -14,9 +15,9 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3; 
+  background-color: #004895;
   cursor: pointer;
-} 
+}
 
 .container {
   margin-left: 30vw;

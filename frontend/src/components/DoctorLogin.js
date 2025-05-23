@@ -2,10 +2,12 @@
 Page for doctors to either sign in or create an account.
 */
 
+
 import './Login.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
 
 export default function DoctorLogin({ setId }) {
     const navigate = useNavigate();
@@ -14,6 +16,7 @@ export default function DoctorLogin({ setId }) {
     const [doctorId, setDoctorId] = useState("");
     const [name, setName] = useState("");
     const [signInError, setSignInError] = useState(false);
+
 
     // saves user's choice when they click sign up or sign in
     const handleChoice = (input) => {
@@ -24,9 +27,11 @@ export default function DoctorLogin({ setId }) {
         }
     }
 
+
     // handle sign in
     const handleSignIn = (e) => {
         e.preventDefault();  
+
 
         let result = ""
         axios.post('http://127.0.0.1:5000/doctor-sign-in', {
@@ -34,12 +39,12 @@ export default function DoctorLogin({ setId }) {
         })
         .then(res => {
             console.log('Response from doctor sign in server:', res.data);
-            
+           
             result = res.data.result;
             if (result === "success") {
                 setId(res.data.doctor_id)
                 navigate('/Doctor'); // redirect to Doctor page after sign in
-            } 
+            }
             else if (result === "error") {
                 setSignInError(true);
                 console.log(signInError)
@@ -50,9 +55,11 @@ export default function DoctorLogin({ setId }) {
         });
     }
 
+
     // handle sign up
     const handleSignUp = (e) => {
         e.preventDefault();  
+
 
         axios.post('http://127.0.0.1:5000/doctor-sign-up', {
             name: name
@@ -67,9 +74,11 @@ export default function DoctorLogin({ setId }) {
         });
     }
 
+
     return (
         <div>
             <h1>Doctor</h1>
+
 
             {/* display both sign in and sign up options */}
             {!signIn && !signUp ? (
@@ -78,7 +87,7 @@ export default function DoctorLogin({ setId }) {
                     <button className="account-button" onClick={() => handleChoice("sign up")}>Create An Account</button>
                 </div>
             ): null}
-        
+       
             {/* display sign in form if user selects sign in */}
             {signIn ? (
                 <div>
@@ -90,13 +99,13 @@ export default function DoctorLogin({ setId }) {
                         <button onClick={(e) => handleSignIn(e)} type="submit">Sign In</button>
                     </form>
                     {signInError && (<p>Invalid Doctor ID.</p>)}
-                    <button onClick={() => setSignIn(false)}>Back</button>
+                    <button className='back-button' onClick={() => setSignIn(false)}>Back</button>
                 </div>
             ) : null}
-            
+           
             {/* display sign up form if user selects sign up */}
             {signUp ? (
-                <div> 
+                <div>
                     <form className="login-form">
                         <div className="login-form-item">
                             <label>Name:</label>
@@ -104,7 +113,7 @@ export default function DoctorLogin({ setId }) {
                         </div>
                         <button onClick={(e) => handleSignUp(e)} type="submit">Sign Up</button>
                     </form>
-                    <button onClick={() => setSignUp(false)}>Back</button>
+                    <button className='back-button' onClick={() => setSignUp(false)}>Back</button>
                 </div>
             ) : null}
         </div>
