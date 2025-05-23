@@ -633,21 +633,32 @@ def count_appointment():
 def get_lab_results():
     data = request.get_json()
     patient_id = data["patient_id"]
+
     query = '''
-    SELECT p.name AS patientName, t.test_name, l.result, l.date AS labDate, a.date AS apptDate, a.time AS apptTime
+    SELECT l.lab_id, t.test_name, l.result, l.date AS labDate, d.name
     FROM lab l
     INNER JOIN test t 
         ON l.test_id = t.test_id
     INNER JOIN patient p 
         ON l.patient_id = p.patient_id
-    INNER JOIN appointment a
-        ON p.patient_id = a.patient_id
-    WHERE patient_id = %s
+    INNER JOIN doctor d
+        ON l.doctor_id = d.doctor_id
+    WHERE l.patient_id = %s
     ORDER BY l.date DESC;
     '''
+
     results = db_ops.select_query_params(query, (patient_id,))
-    for row in results:
-        print(f"{row[0]} had a '{row[1]}' test with result '{row[2]}' on '{row[3]}'. This was a follow up from their appointment on '{row[4]}' at '{row[5]}'.")
+    labs_list = [
+        {
+            "lab_id": lab[0],
+            "test": lab[1],
+            "result": lab[2],
+            "date": lab[3],
+            "doctor_name": lab[4]
+        }
+        for lab in results
+    ]
+    return jsonify({"labs": labs_list})
 
 # export a patient's health records - uses 3 inner joins
 @app.route('/export-health-records', methods=['POST'])
