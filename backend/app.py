@@ -41,6 +41,9 @@ def create_index():
 
 #  database view query - table of all appointment information with the corresponding patient name and doctor name
 def create_patient_appt_summary_view():
+    view_drop = "DROP VIEW IF EXISTS patient_appt_summary;"
+    db_ops.modify_query(view_drop)
+
     query = '''
     CREATE VIEW patient_appt_summary AS
     SELECT a.appointment_id, a.patient_id, p.name AS patient_name, d.name AS doctor_name, a.date, a.time, a.status, a.reason
@@ -55,6 +58,9 @@ def create_patient_appt_summary_view():
 
 # create a stored procedure for inserting a new patient if the email is unique - uses transaction with commit and rollaback
 def create_sp_insert_patient():
+    drop_sp = 'DROP PROCEDURE IF EXISTS sp_insert_patient;'
+    db_ops.modify_query(drop_sp) # dropping in case it is already in db
+
     sp_query = '''
     DELIMITER $$
     CREATE PROCEDURE sp_insert_patient(
@@ -81,13 +87,16 @@ def create_sp_insert_patient():
             ROLLBACK;
         END IF;
     END $$
-    DELIMITER;
+    DELIMITER ;
     '''
     db_ops.modify_query(sp_query)
 
 # function to run create queries and populate tables
 def initialize_database():
     print("Welcome to Health Portal!")
+    create_sp_insert_patient()
+
+    # TODO: Uncomment to create the tables -- Please only run once :)
 
     # db_ops.create_diagnosis_table()
     # db_ops.create_doctor_table()
@@ -99,6 +108,8 @@ def initialize_database():
     # db_ops.create_lab_table()
     # db_ops.create_message_table()
 
+    # TODO: Uncomment to populate the tables
+
     # db_ops.populate_table('./diagnosis.csv', 'diagnosis')
     # db_ops.populate_table('./doctors.csv', 'doctor')
     # db_ops.populate_table('./patients.csv', 'patient')
@@ -109,9 +120,9 @@ def initialize_database():
     # db_ops.populate_table('./labs.csv', 'lab')
     # db_ops.populate_table('./messages.csv', 'message')
 
+    # TODO: uncomment to create!
     # create_index()
     # create_patient_appt_summary_view()
-    # create_sp_insert_patient()
 
 # patient sign up - call the stored procedure to insert a patient
 @app.route('/patient-sign-up', methods=['POST'])
