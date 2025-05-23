@@ -7,7 +7,7 @@ class db_operations():
     def __init__(self, conn_path):
         self.connection = mysql.connector.connect(host=conn_path,
         user="root",
-        password="Carolina1234",
+        password="CPSC408!",
         auth_plugin='mysql_native_password',
         database="HealthPortal")
         self.cursor = self.connection.cursor()
@@ -37,7 +37,6 @@ class db_operations():
         self.cursor.execute(query)  # Execute the query
         return self.cursor.fetchall()  # Fetch and return all results
 
-
    
     # function to simply execute a DQL query with parameters
     # does not commit, returns results
@@ -45,8 +44,6 @@ class db_operations():
     def select_query_params(self, query, dictionary):
         self.cursor.execute(query, dictionary)
         return self.cursor.fetchall()
-
-
 
 
     # function to return the value of the first row's
@@ -168,9 +165,6 @@ class db_operations():
         self.cursor.execute(query)
         print('doctor table created')
 
-
-
-
     # function that creates doctor-record joined table in our database
     def create_doctor_record_table(self):
         query = '''
@@ -208,8 +202,10 @@ class db_operations():
             date DATE,
             test_id INT,
             patient_id INT,
+            doctor_id INT,
             FOREIGN KEY (test_id) REFERENCES test(test_id),
-            FOREIGN KEY (patient_id) REFERENCES patient(patient_id)
+            FOREIGN KEY (patient_id) REFERENCES patient(patient_id),
+            FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id)
         );
         '''
         self.cursor.execute(query)
