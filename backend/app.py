@@ -20,11 +20,11 @@ import atexit # used to close database connection when the application exits
 
 # export records
 from flask import send_file
-import io
+import io, os
 
 # initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "https://healthportal-server.onrender.com"}})
 
 # global variables
 db_ops = db_operations()
@@ -724,4 +724,5 @@ if __name__ == '__main__':
     atexit.register(db_ops.destructor)
     
     # start the Flask application
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

@@ -1,1 +1,13 @@
-frontend/node_modules/.cache/
+# Ignore .env files
+.env
+
+# Ignore node_modules
+node_modules/
+
+# Ignore certs
+certs/
+
+*.pem
+*.key
+*.log
+__pycache__/
