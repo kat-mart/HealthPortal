@@ -28,7 +28,7 @@ function Messages({ role, pID, dID }) {
       // delay the call by 1 ms
       const timer = setTimeout(() => {
         const fetchData = () => {
-          axios.post('http://127.0.0.1:5000/get-messages', {
+          axios.post('https://healthportal-server.onrender.com/get-messages', {
             role: role,
             id: id
           })
@@ -57,10 +57,10 @@ function Messages({ role, pID, dID }) {
     let endpoint = ""
 
     if (role === "patient") {
-      endpoint = "http://127.0.0.1:5000/send-patient-message"
+      endpoint = "https://healthportal-server.onrender.com/send-patient-message"
     } 
     else if (role === "doctor") {
-      endpoint = "http://127.0.0.1:5000/send-doctor-message"
+      endpoint = "https://healthportal-server.onrender.com/send-doctor-message"
     }
 
     axios.post(endpoint, {

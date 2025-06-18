@@ -34,7 +34,7 @@ export default function DoctorLogin({ setId }) {
 
 
         let result = ""
-        axios.post('http://127.0.0.1:5000/doctor-sign-in', {
+        axios.post('https://healthportal-server.onrender.com/doctor-sign-in', {
             doctor_id: doctorId
         })
         .then(res => {
@@ -61,7 +61,7 @@ export default function DoctorLogin({ setId }) {
         e.preventDefault();  
 
 
-        axios.post('http://127.0.0.1:5000/doctor-sign-up', {
+        axios.post('https://healthportal-server.onrender.com/doctor-sign-up', {
             name: name
         })
         .then(res => {

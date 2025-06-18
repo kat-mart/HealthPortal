@@ -34,7 +34,7 @@ export default function PatientLogin({ setId }) {
         e.preventDefault();
 
         let result = ""
-        axios.post('http://127.0.0.1:5000/patient-sign-in', {
+        axios.post('https://healthportal-server.onrender.com/patient-sign-in', {
             email: email,
             password: password
         })
@@ -59,7 +59,7 @@ export default function PatientLogin({ setId }) {
     const handleSignUp = (e) => {
         e.preventDefault();
 
-        axios.post('http://127.0.0.1:5000/patient-sign-up', {
+        axios.post('https://healthportal-server.onrender.com/patient-sign-up', {
             email: email,
             password: password,
             name: name,

@@ -44,7 +44,7 @@ export default function Appointments({ role, pID, dID }) {
         const timer = setTimeout(() => {
             const fetchEvents = async () => {
                 try {
-                    const response = await axios.post('http://127.0.0.1:5000/get-appointments', {
+                    const response = await axios.post('https://healthportal-server.onrender.com/get-appointments', {
                         role: role,
                         patient_id: pID,
                         doctor_id: dID
@@ -72,7 +72,7 @@ export default function Appointments({ role, pID, dID }) {
     // count the number of appointments per doctor
     const app_count = async () => {
         try {
-            const response = await axios.post('http://127.0.0.1:5000/count-appointment', {
+            const response = await axios.post('https://healthportal-server.onrender.com/count-appointment', {
                 role: 'doctor', // Only doctors can see the appointment count
             });
 
@@ -104,7 +104,7 @@ export default function Appointments({ role, pID, dID }) {
             };
     
             // Send the event data to the backend
-            axios.post('http://127.0.0.1:5000/add-appointment', {
+            axios.post('https://healthportal-server.onrender.com/add-appointment', {
                 role: role,
                 patient_id: pID,
                 doctor_id: dID,
@@ -140,7 +140,7 @@ export default function Appointments({ role, pID, dID }) {
             const appointmentId = Number(clickInfo.event.id);  // Get the event's appointment_id from FullCalendar
     
             // Send delete request to the backend
-            axios.post('http://127.0.0.1:5000/delete-appointment', {
+            axios.post('https://healthportal-server.onrender.com/delete-appointment', {
                 appointment_id: appointmentId,  // Pass the correct appointment_id
             })
             .then(response => {

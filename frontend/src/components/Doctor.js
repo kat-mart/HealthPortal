@@ -16,7 +16,7 @@ export default function Doctor({ role, id }) {
           // delay the call by 1 ms
           const timer = setTimeout(() => {
             const fetchData = () => {
-              axios.post('http://127.0.0.1:5000/doctor-profile', {
+              axios.post('https://healthportal-server.onrender.com/doctor-profile', {
                 doctor_id: id
               })
               .then(res => {

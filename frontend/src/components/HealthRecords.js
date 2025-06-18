@@ -17,7 +17,7 @@ export default function HealthRecords({ role, pID, dID }) {
       // delay the call by 1 ms
       const timer = setTimeout(() => {
         const fetchData = () => {
-          axios.post('http://127.0.0.1:5000/lab-results', {
+          axios.post('https://healthportal-server.onrender.com/lab-results', {
             patient_id: pID
           })
           .then(res => {
@@ -38,7 +38,7 @@ export default function HealthRecords({ role, pID, dID }) {
   }, [pID]); // run when id changes
 
   const exportRecord = () => {
-    axios.post('http://127.0.0.1:5000/export-health-records', {
+    axios.post('https://healthportal-server.onrender.com/export-health-records', {
         patient_id: pID
       }, {
         responseType: 'blob' // to get binary data

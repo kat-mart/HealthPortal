@@ -22,7 +22,7 @@ export default function Patient({ role, id }) {
           // delay the call by 1 ms
           const timer = setTimeout(() => {
             const fetchData = () => {
-              axios.post('http://127.0.0.1:5000/patient-profile', {
+              axios.post('https://healthportal-server.onrender.com/patient-profile', {
                 patient_id: id
               })
               .then(res => {
@@ -60,7 +60,7 @@ export default function Patient({ role, id }) {
     const handleUpdateNum = () => {
       const updatePhone = () => {
       // TODO: Add logic to update the phone number in the backend
-      fetch('http://127.0.0.1:5000/update-patient-phone',{
+      fetch('https://healthportal-server.onrender.com/update-patient-phone',{
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
