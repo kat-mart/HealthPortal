@@ -83,6 +83,11 @@ export default function PatientLogin({ setId }) {
         });
     }
 
+    // go back a page
+    const handleBack = () => {
+        navigate('/'); // redirect to Landing page
+    }
+
     return (
         <div>
             <h1>Patient</h1>
@@ -159,6 +164,11 @@ export default function PatientLogin({ setId }) {
                     <button className='back-button' onClick={() => setSignUp(false)}>Back</button>
                 </div>
             ) : null}
+
+            {/* button to go back a page */}
+            {(!signIn && !signUp) &&
+                <button className='back-button' onClick={handleBack}>Back</button>
+            }
         </div>
     )
 }
