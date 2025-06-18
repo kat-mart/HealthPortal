@@ -15,7 +15,7 @@ from datetime import timedelta
 
 # flask imports
 from flask import Flask, jsonify, request
-from flask_cors import CORS # allow API calls from localhost
+from flask_cors import CORS, cross_origin
 import atexit # used to close database connection when the application exits
 
 # export records
