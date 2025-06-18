@@ -13,7 +13,7 @@ class db_operations():
             user=os.getenv('DB_USER'),
             password=os.getenv('DB_PASSWORD'),
             database="defaultdb",
-            ssl_ca=os.getenv('CA_CERT_PATH'),
+            ssl_ca="/etc/secrets/ca.pem",
             auth_plugin='mysql_native_password'
         )
         self.cursor = self.connection.cursor()
