@@ -27,7 +27,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 # global variables
-db_ops = db_operations("localhost")
+db_ops = db_operations()
 
 # functions for initialization
 
@@ -110,15 +110,15 @@ def initialize_database():
 
     # TODO: Uncomment to populate the tables
 
-    # db_ops.populate_table('./diagnosis.csv', 'diagnosis')
-    # db_ops.populate_table('./doctors.csv', 'doctor')
-    # db_ops.populate_table('./patients.csv', 'patient')
-    # db_ops.populate_table('./records.csv', 'record')
-    # db_ops.populate_table('./doctorRecords.csv', 'doctor_record')
-    # db_ops.populate_table('./appointments.csv', 'appointment')
-    # db_ops.populate_table('./tests.csv', 'test')
-    # db_ops.populate_table('./labs.csv', 'lab')
-    # db_ops.populate_table('./messages.csv', 'message')
+    # db_ops.populate_table('./csv_files/diagnosis.csv', 'diagnosis')
+    # db_ops.populate_table('./csv_files/doctors.csv', 'doctor')
+    # db_ops.populate_table('./csv_files/patients.csv', 'patient')
+    # db_ops.populate_table('./csv_files/records.csv', 'record')
+    # db_ops.populate_table('./csv_files/doctorRecords.csv', 'doctor_record')
+    # db_ops.populate_table('./csv_files/appointments.csv', 'appointment')
+    # db_ops.populate_table('./csv_files/tests.csv', 'test')
+    # db_ops.populate_table('./csv_files/labs.csv', 'lab')
+    # db_ops.populate_table('./csv_files/messages.csv', 'message')
 
     # TODO: uncomment to create!
     # create_index()
@@ -545,7 +545,7 @@ def add_appointment():
         # now fetch the newly created appointment_id
         get_appointment_id = "SELECT LAST_INSERT_ID();"
         appointment_id = db_ops.single_record(get_appointment_id)  # fetch the last inserted id
-
+        
         return jsonify({
             "result": "success",
             "appointment_id": appointment_id,  # return the appointment_id
@@ -595,6 +595,10 @@ def get_appointments():
             }
             for appointment in appointments
         ]
+        for appointment in appointments_list:
+            if len(appointment["time"]) == 7:
+                appointment["time"] = "0" + appointment["time"]
+
         return jsonify({"appointments": appointments_list})
     
     elif role == "doctor":
@@ -614,6 +618,10 @@ def get_appointments():
             }
             for appointment in appointments
         ]
+        for appointment in appointments_list:
+            if len(appointment["time"]) == 7:
+                appointment["time"] = "0" + appointment["time"]
+
         return jsonify({"appointments": appointments_list})
     
 # count the number of appointments by doctor - uses group by

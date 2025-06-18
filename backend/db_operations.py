@@ -1,17 +1,24 @@
 import mysql.connector
 from helper import helper
-
+import os 
+from dotenv import load_dotenv
 
 class db_operations():
     # constructor with connection path to DB
-    def __init__(self, conn_path):
-        self.connection = mysql.connector.connect(host=conn_path,
-        user="root",
-        password="CPSC408!",
-        auth_plugin='mysql_native_password',
-        database="HealthPortal")
+    def __init__(self):
+        load_dotenv()  # Load environment variables from .env file
+        self.connection = mysql.connector.connect(
+            host=os.getenv('DB_HOST'),
+            port=int(os.getenv('DB_PORT')),  
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            database="defaultdb",
+            ssl_ca=os.getenv('CA_CERT_PATH'),
+            auth_plugin='mysql_native_password'
+        )
         self.cursor = self.connection.cursor()
         print("connection made..")
+    
 
 
     # function to simply execute a DDL or DML query.
