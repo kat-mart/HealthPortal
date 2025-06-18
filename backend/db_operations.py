@@ -25,32 +25,33 @@ class db_operations():
     # commits query, returns no results.
     # best used for insert/update/delete queries with no parameters
     def modify_query(self, query):
-        self.cursor.execute(query)
-        self.connection.commit()
-
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            self.connection.commit()
 
     # function to simply execute a DDL or DML query with parameters
     # commits query, returns no results.
     # best used for insert/update/delete queries with named placeholders
     def modify_query_params(self, query, params):
-        self.cursor.execute(query, params)  # positional placeholders
-        self.connection.commit()
-
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, params)  
+            self.connection.commit()
 
     # function to simply execute a DQL query
     # does not commit, returns results
     # best used for select queries with no parameters
     def select_query(self, query):
-        self.cursor.execute(query)  # Execute the query
-        return self.cursor.fetchall()  # Fetch and return all results
-
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            return cursor.fetchall()
    
     # function to simply execute a DQL query with parameters
     # does not commit, returns results
     # best used for select queries with named placeholders
     def select_query_params(self, query, dictionary):
-        self.cursor.execute(query, dictionary)
-        return self.cursor.fetchall()
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, dictionary)
+            return cursor.fetchall()
 
 
     # function to return the value of the first row's
@@ -58,8 +59,9 @@ class db_operations():
     # best used for querying a single aggregate select
     # query with no parameters
     def single_record(self, query):
-        self.cursor.execute(query)
-        return self.cursor.fetchone()[0]
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            return cursor.fetchone()[0]
    
     # function to return the value of the first row's
     # first attribute of some select query.
