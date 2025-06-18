@@ -15,7 +15,7 @@ from datetime import timedelta
 
 # flask imports
 from flask import Flask, jsonify, request
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 import atexit # used to close database connection when the application exits
 
 # export records
@@ -24,7 +24,7 @@ import io, os
 
 # initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://healthportal-server.onrender.com"}})
+CORS(app, resources={r"/*": {"origins": "https://health-portal-amber.vercel.app"}})
 
 # global variables
 db_ops = db_operations()
